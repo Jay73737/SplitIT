@@ -1,0 +1,57 @@
+.card {
+  position: relative;
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.card:hover {
+  transform: translateY(-6px);
+}
+
+/* glowing hover outline */
+.card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  padding: 2px;
+  background: linear-gradient(270deg, #ff00ff, #2a00ff, #ff00ff);
+  background-size: 600% 600%;
+  animation: cardSpin 6s linear infinite;
+  opacity: 0;
+  transition: opacity 0.2s;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  pointer-events: none;
+}
+.card:hover::after {
+  opacity: 1;
+}
+@keyframes cardSpin {
+  0%   { background-position: 0%   50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0%   50%; }
+}
+
+.thumb {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+}
+
+.title {
+  color: #fff;
+  font-size: 14px;
+  padding: 8px 8px 4px;
+}
+
+.channel {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 11px;
+  padding: 0 8px 8px;
+}
