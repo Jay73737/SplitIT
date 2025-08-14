@@ -8,3 +8,4 @@
 /_demucs/__pycache__/
 .claude
 .venv
+.gitignore
