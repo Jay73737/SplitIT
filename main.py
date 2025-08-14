@@ -11,12 +11,12 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QIcon, QDesktopServices
 from PyQt6.QtCore import Qt, QUrl
-from YoutubeDownloader import YoutubeDownloader
-from Downloader import DownloadThread
-from StemSplitter import StemSplitter
-from Results import ResultsWindow
+from src.core.YoutubeDownloader import YoutubeDownloader
+from src.core.Downloader import DownloadThread
+from src.core.StemSplitter import StemSplitter
+from src.core.Results import ResultsWindow
 
-from GUIComponents import DraggableStemLabel, CudaDeviceDialog, APIKeyWindow
+from src.ui.GUIComponents import DraggableStemLabel, CudaDeviceDialog, APIKeyWindow
 from contextvars import ContextVar
 from pathlib import Path
 import json
@@ -32,7 +32,7 @@ import torch
 
 
 
-# Main GUI class for the app
+
 class MainGUI(QWidget):
 
     def __init__(self):
@@ -73,7 +73,7 @@ class MainGUI(QWidget):
         self.file_formats = [
          "Audio - wav","Audio - mp3", "Video - mp4"
         ]
-        sys.path.insert(0, Path(__file__).absolute() / "demucs")
+        sys.path.insert(0, str(Path(__file__).absolute().parent / "src" / "demucs"))
 
         self.filepath = ""
         self.split_ind = 1
@@ -113,10 +113,7 @@ class MainGUI(QWidget):
             json.dump(config, f, indent=4)
 
 
-    # Writes the config data passed in args to the config file. 
-    # class_var will usually be self (or whatever self.config_params you want to write)
-    # param is the parameter to update (api_key, cache)
-    # value is the value you want to set it to
+
     @staticmethod
     def write_config(class_var,param,value):
         
@@ -690,7 +687,7 @@ class MainGUI(QWidget):
 def main():
 
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('icon.ico'))
+    app.setWindowIcon(QIcon('assets/icon.ico'))
     window = MainGUI()
     window.show()
     window.activateWindow()
