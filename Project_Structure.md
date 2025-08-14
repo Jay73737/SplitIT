@@ -77,62 +77,102 @@ this thing actually has **two completely different interfaces**:
 1. **python pyqt6 ui** (`src/ui/`) - the classic desktop app
    - just run: `python main.py`
    - looks and feels like a native desktop app
-   
 2. **electron react ui** (`frontend/`) - the shiny modern one
    - run: `cd frontend && npm install && npm start`
    - has that fancy pill-shaped animated window
    - basically a web app that runs on your desktop
 
-### how to connect them
-
-you've got a few options for making these work together:
-
-#### option 1: keep them separate (what we have now)
-- both apps do their own thing
-- users pick whichever they like better
-- electron can talk to python through apis or just run python as a subprocess
-
-#### option 2: electron calls python
-- use the pretty electron ui as your main interface
-- when you need to do audio processing, just call the python scripts
-- best of both worlds - pretty ui + powerful python backend
-
-#### option 3: build an api
-- turn the python stuff into a proper rest api
-- electron frontend talks to python over http
-- most flexible but takes more work to set up
-
 ## how to run everything
 
 ### the python version
+
 ```bash
 python main.py     # normal mode
 python main.pyw    # windows mode (no console window)
 ```
 
 ### the electron version
+
 ```bash
 cd frontend
 npm install        # first time only - installs all the node packages
 npm start          # dev server
 npm run electron   # runs as a desktop app
+npm run electron-dev # runs electron with hot reload (dev mode)
 ```
 
-## what got cleaned up
+## npm dependencies you'll need
 
-### organized the mess
-- **core stuff** (`src/core/`) - all the download and stem splitting logic
-- **python ui** (`src/ui/`) - the pyqt6 interface
-- **electron frontend** (`frontend/`) - your modern react interface
-- **config** (`config/`) - settings all in one place
-- **assets** (`assets/`) - icons and images
+when someone downloads this project, they'll need to install these npm packages for the electron frontend to work:
 
-### got rid of duplicates
-- deleted duplicate files that were confusing
-- put similar things together in logical folders
+### core dependencies (automatically installed with `npm install`)
 
-### fixed all the imports
-- updated python imports to work with the new structure
-- made sure asset paths point to the right places
+**react ecosystem:**
 
-now everything's organized and you can easily work on either interface without things getting messy.
+- `react@^19.1.1` - the main react framework
+- `react-dom@^19.1.1` - react rendering for web
+- `react-scripts@5.0.1` - create-react-app toolchain
+
+**electron:**
+
+- `electron@^37.2.5` - desktop app framework (dev dependency)
+
+**animations & ui:**
+
+- `framer-motion@^11.18.2` - smooth animations and transitions
+- `@wavesurfer/react@^1.0.11` - react wrapper for wavesurfer
+- `wavesurfer.js@^7.10.1` - audio waveform visualization
+
+**youtube integration:**
+
+- `ytdl-core@^4.11.5` - download youtube audio/video
+
+**testing:**
+
+- `@testing-library/react@^16.3.0` - react testing utilities
+- `@testing-library/jest-dom@^6.6.4` - jest dom matchers
+- `@testing-library/dom@^10.4.1` - dom testing utilities
+- `@testing-library/user-event@^13.5.0` - user interaction testing
+
+**development tools:**
+
+- `concurrently@^9.2.0` - run multiple commands at once
+- `cross-env@^10.0.0` - cross-platform environment variables
+- `wait-on@^8.0.4` - wait for services to be available
+
+**monitoring:**
+
+- `web-vitals@^2.1.4` - performance monitoring
+
+### quick setup for new users
+
+**option 1: use the setup script (easiest)**
+
+```bash
+# clone the repo
+git clone [your-repo-url]
+cd SplitMe
+
+# run the setup script
+chmod +x setup.sh && ./setup.sh    # on mac/linux
+# or
+setup.bat                           # on windows
+```
+
+**option 2: manual setup**
+
+```bash
+# clone the repo
+git clone [your-repo-url]
+cd SplitMe
+
+# install python dependencies
+pip install -r requirements.txt
+
+# install node dependencies for the frontend
+cd frontend
+npm install
+
+# run the electron app
+npm run electron-dev
+```
