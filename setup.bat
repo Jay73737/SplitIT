@@ -74,6 +74,39 @@ cd /d "%ORIGINAL_DIR%"
 echo [OK] Node.js dependencies installed successfully
 echo.
 echo Setup complete! You can now run:
+echo   cd frontend ^&^& npm run electron-dev
+echo.
+pause
+exit /b 0
+
+:cleanup_and_exit
+cd /d "%ORIGINAL_DIR%"
+echo.
+echo Setup failed. Please fix the errors above and try again.
+pause
+exit /b 1
+echo Installing Node.js dependencies for frontend...
+cd /d frontend
+
+if not exist "package.json" (
+    echo [ERROR] package.json not found in frontend directory
+    cd /d "%ORIGINAL_DIR%"
+    goto :cleanup_and_exit
+)
+
+npm install
+
+if !errorlevel! neq 0 (
+    echo [ERROR] Failed to install Node.js dependencies
+    cd /d "%ORIGINAL_DIR%"
+    goto :cleanup_and_exit
+)
+
+cd /d "%ORIGINAL_DIR%"
+
+echo [OK] Node.js dependencies installed successfully
+echo.
+echo Setup complete! You can now run:
 echo   Python version: %PYTHON_CMD% main.py
 echo   Electron version: cd frontend ^&^& npm run electron-dev
 echo.
