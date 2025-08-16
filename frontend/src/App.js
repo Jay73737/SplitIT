@@ -6,7 +6,6 @@ import ResultsWindow from "./ResultsWindow";
 import DashboardView from "./DashboardView";
 import "./App.css";
 
-// Rotating helper messages for the search bar
 const messages = ["Type in a search", "Paste a link", "Drop in a file"];
 const PANEL_HEIGHT = 478;
 const DASHBOARD_HEIGHT = 1200;
@@ -18,7 +17,6 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Cycle through helper messages every 3 seconds
   useEffect(() => {
     const id = setInterval(
       () => setMsgIdx((i) => (i + 1) % messages.length),
@@ -27,7 +25,6 @@ export default function App() {
     return () => clearInterval(id);
   }, []);
 
-  // Notify Electron main process to resize the window depending on state
   useEffect(() => {
     if (selected) {
       window.electronAPI?.resultsOpened(DASHBOARD_HEIGHT);
@@ -38,7 +35,6 @@ export default function App() {
     }
   }, [results.length, selected]);
 
-  // Perform a YouTube search and set results
   const handleSearch = async (term) => {
     const q = term.trim();
     if (!q) {
@@ -85,7 +81,6 @@ export default function App() {
   };
 
   return (
-    // The outer wrapper ensures that children are positioned relative to it
     <WindowWrapper>
       {selected ? (
         <DashboardView video={selected} onBack={() => setSelected(null)} />

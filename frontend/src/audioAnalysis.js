@@ -34,14 +34,12 @@ export class AudioAnalyzer {
     }
   }
 
-  // Test function to check if Piped API works with a known video
   async testPipedAPI() {
-    const testVideoId = 'dQw4w9WgXcQ'; // Rick Astley - Never Gonna Give You Up (should always work)
+    const testVideoId = 'dQw4w9WgXcQ';
     console.log('Testing Piped API with known working video:', testVideoId);
     return await this.getYouTubeAudioUrl(testVideoId);
   }
 
-  // Check status of audio extraction services
   async checkServiceStatus() {
     console.log('Checking audio extraction service status...');
     const result = await this.testPipedAPI();
@@ -58,7 +56,6 @@ export class AudioAnalyzer {
   }
 
   async getYouTubeAudioUrl(videoId) {
-    // Updated list of Piped instances (as of 2024-2025) with more reliable ones first
     const pipedInstances = [
       'https://pipedapi.syncpundit.io',
       'https://pipedapi.palvelukeskus.eu', 
@@ -81,7 +78,7 @@ export class AudioAnalyzer {
         console.log("Trying Piped instance:", apiUrl);
         
         const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000); // 5 second timeout (faster failover)
+        const timeout = setTimeout(() => controller.abort(), 5000);
         
         const response = await fetch(apiUrl, {
           headers: {
@@ -99,17 +96,13 @@ export class AudioAnalyzer {
         
         const data = await response.json();
         
-        // Try to find any available audio stream (prefer lower quality for compatibility)
         const audioStreams = data?.audioStreams || [];
         console.log(`Found ${audioStreams.length} audio streams from ${instance}`);
         
         if (audioStreams.length > 0) {
-          // Sort by quality (prefer webm format and lower bitrates for better compatibility)
           const sortedStreams = audioStreams.sort((a, b) => {
-            // Prefer webm over m4a/mp4
             if (a.mimeType?.includes('webm') && !b.mimeType?.includes('webm')) return -1;
             if (!a.mimeType?.includes('webm') && b.mimeType?.includes('webm')) return 1;
-            // Then prefer lower bitrate (more compatible)
             return (a.bitrate || 0) - (b.bitrate || 0);
           });
           
@@ -144,14 +137,12 @@ export class AudioAnalyzer {
     
     console.warn("All Piped instances failed for video:", videoId);
     
-    // Try alternative method using YouTube's iframe player API
     console.log("Attempting alternative YouTube audio extraction...");
     return await this.getYouTubeAudioUrlAlternative(videoId);
   }
 
   async getYouTubeAudioUrlAlternative(videoId) {
     try {
-      // Try using Invidious instances as alternative
       const invidiousInstances = [
         'https://inv.nadeko.net',
         'https://invidious.snopyta.org',
@@ -188,7 +179,6 @@ export class AudioAnalyzer {
           ) || [];
           
           if (audioFormats.length > 0) {
-            // Prefer webm audio formats
             const webmAudio = audioFormats.find(f => f.type?.includes('webm'));
             const selectedFormat = webmAudio || audioFormats[0];
             console.log(`Found audio from Invidious: ${selectedFormat.url}`);
@@ -359,7 +349,6 @@ export class AudioAnalyzer {
     const arrayBuffer = new ArrayBuffer(44 + length * numberOfChannels * 2);
     const view = new DataView(arrayBuffer);
     
-    // WAV header
     const writeString = (offset, string) => {
       for (let i = 0; i < string.length; i++) {
         view.setUint8(offset + i, string.charCodeAt(i));
@@ -380,7 +369,6 @@ export class AudioAnalyzer {
     writeString(36, 'data');
     view.setUint32(40, length * numberOfChannels * 2, true);
     
-    // Write audio data
     let offset = 44;
     for (let i = 0; i < length; i++) {
       for (let channel = 0; channel < numberOfChannels; channel++) {

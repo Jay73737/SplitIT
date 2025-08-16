@@ -23,7 +23,6 @@ export default function DashboardView({ video, onBack }) {
     other: false,
   });
 
-  // will hold the downloaded WAV blob provided by Waveform
   const [audioBlob, setAudioBlob] = useState(null);
 
   if (!video) return null;
@@ -115,7 +114,6 @@ export default function DashboardView({ video, onBack }) {
                 );
                 return;
               }
-              // example: save / upload / pass to a worker
               console.log("Ready to process audioBlob:", audioBlob);
             }}
           >
