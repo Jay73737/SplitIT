@@ -1,14 +1,19 @@
+// preload.js — main window
 const { contextBridge, ipcRenderer } = require("electron");
 
-contextBridge.exposeInMainWorld("electronAPI", {
-  resultsOpened: (panelHeight) =>
-    ipcRenderer.send("results-opened", { height: panelHeight }),
-  resultsClosed: () => ipcRenderer.send("results-closed"),
-});
+function addElectronClass() {
+  const add = () => document.documentElement.classList.add("is-electron");
+  if (document.readyState === "loading") {
+    window.addEventListener("DOMContentLoaded", add, { once: true });
+  } else {
+    add();
+  }
+}
+addElectronClass();
 
-contextBridge.exposeInMainWorld("audioAPI", {
-  downloadAudioForVideo: (videoId) =>
-    ipcRenderer.invoke("download-audio-for-video", { videoId }),
-  downloadAudioToFile: (videoId) =>
-    ipcRenderer.invoke("download-audio-to-file", { videoId }),
+contextBridge.exposeInMainWorld("electronAPI", {
+  setPillGeometry: (bounds) => ipcRenderer.send("pill:set-geometry", bounds),
+  onPillSubmit: (fn) => ipcRenderer.on("pill:submit", (_e, v) => fn(v)),
+  resultsOpened: (height) => ipcRenderer.send("results-opened", height),
+  resultsClosed: () => ipcRenderer.send("results-closed"),
 });

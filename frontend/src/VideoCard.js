@@ -1,4 +1,5 @@
 import "./App.css";
+import { useSelection } from "./store/selection";
 
 function formatDuration(iso) {
   const match = iso.match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
@@ -14,7 +15,17 @@ function formatDuration(iso) {
 }
 
 function VideoCard({ video, onSelect }) {
+  const { setSelected } = useSelection();
+  
   const handleClick = () => {
+    // Use the new backend selection system for YouTube videos
+    const sourceUrl = `https://www.youtube.com/watch?v=${video.id}`;
+    setSelected({
+      title: video.title,
+      sourceUrl: sourceUrl
+    });
+    
+    // Also call the legacy onSelect for backwards compatibility
     if (onSelect) onSelect(video);
   };
 

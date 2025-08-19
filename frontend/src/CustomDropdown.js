@@ -13,7 +13,6 @@ const CustomDropdown = ({
   const [selectedValue, setSelectedValue] = useState(value || "");
   const dropdownRef = useRef(null);
 
-  
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -25,7 +24,6 @@ const CustomDropdown = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  
   useEffect(() => {
     setSelectedValue(value || "");
   }, [value]);
@@ -47,29 +45,34 @@ const CustomDropdown = ({
     type: "spring",
     stiffness: 400,
     damping: 28,
-    mass: 0.8
+    mass: 0.8,
   };
 
   const chevronSpring = {
     type: "spring",
     stiffness: 300,
-    damping: 25
+    damping: 25,
   };
 
   return (
-    <div className={`dash-select-wrapper ${className} ${isOpen && pushContent ? "dropdown-open" : ""}`} ref={dropdownRef}>
+    <div
+      className={`dash-select-wrapper ${className} ${
+        isOpen && pushContent ? "dropdown-open" : ""
+      }`}
+      ref={dropdownRef}
+    >
       <motion.div
         className={`dash-select ${isOpen ? "open" : ""}`}
         onClick={() => setIsOpen(!isOpen)}
-        whileHover={{ 
+        whileHover={{
           scale: 1.02,
-          backgroundColor: "#423a6d"
+          backgroundColor: "#423a6d",
         }}
         whileTap={{ scale: 0.98 }}
         transition={springConfig}
       >
         <span>{getSelectedLabel()}</span>
-        <motion.div 
+        <motion.div
           className="dash-select-chevron"
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={chevronSpring}
@@ -78,22 +81,22 @@ const CustomDropdown = ({
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
+          <motion.div
             className="dash-dropdown open"
-            initial={{ 
+            initial={{
               opacity: 0,
               scale: 0.95,
-              y: -8
+              y: -8,
             }}
-            animate={{ 
+            animate={{
               opacity: 1,
               scale: 1,
-              y: 0
+              y: 0,
             }}
-            exit={{ 
+            exit={{
               opacity: 0,
               scale: 0.95,
-              y: -8
+              y: -8,
             }}
             transition={springConfig}
             style={{ transformOrigin: "top" }}
@@ -109,11 +112,11 @@ const CustomDropdown = ({
                 animate={{ opacity: 1, x: 0 }}
                 transition={{
                   ...springConfig,
-                  delay: index * 0.05
+                  delay: index * 0.05,
                 }}
-                whileHover={{ 
+                whileHover={{
                   x: 4,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)"
+                  backgroundColor: "rgba(255, 255, 255, 0.08)",
                 }}
                 whileTap={{ scale: 0.98 }}
               >

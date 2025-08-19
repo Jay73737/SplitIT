@@ -11,7 +11,7 @@ export default function ResultsWindow({ results, onSelect }) {
     <motion.div
       className="results-window"
       initial={{ height: 0, opacity: 0, y: -20 }}
-      animate={{ height: 540, opacity: 1, y: 0 }}
+      animate={{ height: 478, opacity: 1, y: 0 }}
       exit={{ height: 0, opacity: 0, y: -20 }}
       transition={spring}
       style={{ WebkitAppRegion: "drag" }}

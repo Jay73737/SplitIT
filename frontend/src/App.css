@@ -1,4 +1,3 @@
-
 body {
   margin: 0;
   background: transparent;
@@ -50,6 +49,14 @@ body {
   border: 2px solid transparent;
   background-clip: padding-box;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.pill-window.drag-over {
+  background: rgba(124, 58, 237, 0.3);
+  border-color: rgba(124, 58, 237, 0.6);
+  box-shadow: 0 8px 32px rgba(124, 58, 237, 0.4);
+  transform: scale(1.02);
 }
 
 .pill-window::before {
@@ -69,12 +76,8 @@ body {
 }
 
 @keyframes pillBorder {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 200% 0;
-  }
+  0% { background-position: 0 0; }
+  100% { background-position: 200% 0; }
 }
 
 .pill-text {
@@ -88,21 +91,11 @@ body {
 }
 
 @keyframes fadeText {
-  0% {
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  40% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 0;
-  }
+  0% { opacity: 0; }
+  10% { opacity: 1; }
+  40% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 0; }
 }
 
 .pill-input {
@@ -227,18 +220,18 @@ body {
 }
 
 .dashboard {
-  width: 1900px;
-  height: 1200px;
+  width: 100vw;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   padding: 0;
   border-radius: 48px;
   background: linear-gradient(135deg, #2a1a4e 0%, #1a1232 100%);
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65);
+  box-shadow: none;
   overflow: hidden;
   position: absolute;
-  top: calc(50% - 600px);
-  left: calc(50% - 950px);
+  top: 0;
+  left: 0;
 }
 
 .dash-header {
@@ -257,9 +250,16 @@ body {
   margin-right: 8px;
 }
 
-.dash-info {
-  flex: 1;
+.dash-thumbnail.local-file-icon {
+  background: linear-gradient(135deg, #7c3aed, #c026d3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  border-radius: 34px;
 }
+
+.dash-info { flex: 1; }
 
 .dash-title {
   font: 700 24px/1.2 "Inter", sans-serif;
@@ -275,8 +275,8 @@ body {
 }
 
 .dash-close {
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.1);
   border: none;
@@ -287,6 +287,8 @@ body {
   justify-content: center;
   transition: all 0.2s;
   margin-left: auto;
+  z-index: 1003;
+  pointer-events: auto;
 }
 
 .dash-close:hover {
@@ -298,13 +300,15 @@ body {
   flex: 1;
   display: flex;
   padding: 24px;
-  gap: 48px;
+  gap: 32px;
   align-items: flex-start;
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .dash-sidebar {
-  width: 360px;
-  height: 96%;
+  width: 280px;
+  height: 94%;
   position: relative;
   border-radius: 7px 33px 33px 33px;
   background: #1d1d1dc2;
@@ -319,49 +323,230 @@ body {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 24px;
-  margin-bottom: 32px;
+  gap: 16px;
+  margin-bottom: 20px;
   position: relative;
-  z-index: 10;
+  z-index: 1002;
   transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  pointer-events: auto;
 }
 
-.dash-select {
-  position: relative;
-  z-index: 11;
-}
+.dash-select { position: relative; z-index: 11; }
+
+/* =========================
+   STEM LIST + BAR ALIGNMENT
+   ========================= */
 
 .stem-list {
-  position: relative;
+  --bar-w: 28px;
+  --bar-gap: 14px;
+  --dot-size: 20px;
+
+  position: absolute;
+  bottom: 70px;
+  left: 18px;
+  right: 24px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  padding: 8px 8px 8px calc(var(--bar-w) + var(--bar-gap));
+  border-radius: 20px;
   z-index: 11;
 }
 
-.split-audio-btn {
-  position: relative;
-  z-index: 11;
+.stem-list::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: var(--bar-w);
+  border-radius: 140px;
+  background: linear-gradient(
+    180deg,
+    rgba(138, 43, 226, 0.3) 0%,
+    rgba(147, 51, 234, 0.5) 20%,
+    rgba(168, 85, 247, 0.6) 35%,
+    rgba(196, 38, 211, 0.7) 50%,
+    rgba(236, 72, 153, 0.6) 65%,
+    rgba(147, 51, 234, 0.5) 80%,
+    rgba(138, 43, 226, 0.3) 100%
+  );
+  background-size: 10% 300%;
+  animation: verticalGradient 16s ease-in-out infinite;
+  z-index: 0;
+  opacity: 1;
 }
 
+@keyframes verticalGradient {
+  0% { background-position: 50% 0%; }
+  50% { background-position: 50% 100%; }
+  100% { background-position: 50% 0%; }
+}
+
+.stem-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  z-index: 1;
+  pointer-events: auto;
+}
+
+.stem-dot {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(
+    -1 * (var(--bar-w) + var(--bar-gap)) +
+    (var(--bar-w) - var(--dot-size)) / 2
+  );
+  width: var(--dot-size);
+  height: var(--dot-size);
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, #666, #444);
+  transition: all 0.3s;
+  flex-shrink: 0;
+  pointer-events: none;
+}
+
+.stem-item.active .stem-dot {
+  background: radial-gradient(circle at 30% 30%, #fff, #e0e0e0);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
+}
+
+.stem-item.active .stem-dot::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.5; }
+}
+
+.stem-label {
+  color: #b8b5d6;
+  font: 500 18px "Inter", sans-serif;
+  transition: color 0.2s;
+  letter-spacing: 0.5px;
+}
+
+.stem-item.active .stem-label {
+  color: #fff;
+  text-shadow: 0 0 18px rgba(255, 255, 255, 0.5);
+}
+
+/* =========================
+   (end) STEM LIST CHUNK
+   ========================= */
+
+.dash-select { position: relative; z-index: 11; }
+
+/* ===== DROPDOWN (UPDATED) ===== */
+
+.dash-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: #2a2451;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 8px 0;
+  z-index: 100;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  max-height: 140px;
+  overflow-y: auto;
+  overflow-x: hidden;     /* remove bottom scrollbar */
+  margin-top: 6px;
+  box-sizing: border-box;
+  transform-origin: top center;
+}
+
+.dash-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scaleY(1);
+}
+
+/* Reserve space when a dropdown is open so the next control won't overlap */
 .dash-select-wrapper {
   position: relative;
-  width: 100%;
-  transform: translateY(0);
-  transition: margin-bottom 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  width: 80%;
+  --dropdown-open-space: 156px;   /* 140px list + 8px padding + ~8px buffer */
+  margin-bottom: 10px;
+  transition: margin-bottom 0.25s ease;
+}
+.dash-select-wrapper.dropdown-open { margin-bottom: var(--dropdown-open-space); }
+
+/* Remove the old sibling transform hack to avoid weird gaps */
+/* .dash-select-wrapper.dropdown-open + .dash-select-wrapper { transform: translateY(180px); } */
+
+.dash-option {
+  padding: 8px 18px;
+  padding-left: 42px;
+  color: #cfcbe6;
+  font: 500 16px "Inter", sans-serif;
+  cursor: pointer;
+  position: relative;
+  user-select: none;
+  line-height: 1.25;
+  border-radius: 14px;
 }
 
-.dash-select-wrapper.dropdown-open + .dash-select-wrapper {
-  position: relative;
-  transform: translateY(180px);
+.dash-option:hover {
+  background: rgba(10, 8, 28, 0.55);  /* darker tint */
+  color: #e6e2ff;                     /* gentle lift */
+}
+
+.dash-option.selected {
+  background: rgba(12, 10, 36, 0.7);  /* darker selected */
+  color: #e3ddff;
+}
+
+.dash-option.selected::before {
+  content: "\2713";
+  position: absolute;
+  left: 18px;
+  color: #b6a6ff;                     /* lavender check */
+  font-weight: 700;
+}
+
+/* keep only a slim vertical scrollbar if needed */
+.dash-dropdown::-webkit-scrollbar { width: 4px; height: 0; }
+.dash-dropdown::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+.dash-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.18);
+  border-radius: 3px;
+}
+.dash-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .dash-select {
-  width: 80%;
-  height: 45px;
+  width: 100%;
+  height: 37px;
   border: none;
-  border-radius: 28px;
+  border-radius: 20px;
   background: #3a3361;
   color: #b8b5d6;
-  padding: 0 48px 0 24px;
-  font: 500 18px "Inter", sans-serif;
+  padding: 0 40px 0 20px;
+  font: 500 16px "Inter", sans-serif;
   cursor: pointer;
   outline: none;
   appearance: none;
@@ -372,6 +557,8 @@ body {
   align-items: center;
   border: 1px solid rgba(255, 255, 255, 0.1);
   user-select: none;
+  z-index: 1003;
+  pointer-events: auto;
 }
 
 .dash-select-chevron {
@@ -396,193 +583,7 @@ body {
   color: #fff;
 }
 
-.dash-select:hover .dash-select-chevron {
-  border-top-color: #fff;
-}
-
-.dash-dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: #2a2451;
-  border-radius: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 12px 0;
-  z-index: 100;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-  max-height: 200px;
-  overflow-y: auto;
-  margin-top: 8px;
-}
-
-.dash-dropdown.open {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0) scaleY(1);
-}
-
-.dash-option {
-  padding: 12px 24px;
-  padding-left: 48px;
-  color: #b8b5d6;
-  font: 500 16px "Inter", sans-serif;
-  cursor: pointer;
-  position: relative;
-  user-select: none;
-}
-
-.dash-option:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #fff;
-}
-
-.dash-option.selected {
-  color: #fff;
-}
-
-.dash-option.selected::before {
-  content: "\2713";
-  position: absolute;
-  left: 24px;
-  color: #fff;
-  font-weight: bold;
-}
-
-.dash-dropdown::-webkit-scrollbar {
-  width: 6px;
-}
-
-.dash-dropdown::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
-
-.dash-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
-}
-
-.dash-dropdown::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.stem-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  margin-top: 160px;
-  margin-bottom: 32px;
-  padding: 8px;
-  position: relative;
-  border-radius: 20px;
-}
-
-.stem-list::before {
-  content: '';
-  position: absolute;
-  left: 5px;
-  top: 29px;
-  bottom: 30px;
-  width: 28px;
-  border-radius: 140px;
-  background: linear-gradient(180deg,
-    rgba(138, 43, 226, 0.3) 0%,
-    rgba(147, 51, 234, 0.5) 20%,
-    rgba(168, 85, 247, 0.6) 35%,
-    rgba(196, 38, 211, 0.7) 50%,
-    rgba(236, 72, 153, 0.6) 65%,
-    rgba(147, 51, 234, 0.5) 80%,
-    rgba(138, 43, 226, 0.3) 100%
-  );
-  background-size: 10% 300%;
-  animation: verticalGradient 16s ease-in-out infinite;
-  z-index: 0;
-  opacity: 1;
-}
-
-@keyframes verticalGradient {
-  0% {
-    background-position: 50% 0%;
-  }
-  50% {
-    background-position: 50% 100%;
-  }
-  100% {
-    background-position: 50% 0%;
-  }
-}
-
-.stem-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 10px;
-  border-radius: 12px;
-  padding-left: 1px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  z-index: 1;
-  height: 52px;
-}
-
-.stem-dot {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #666, #444);
-  transition: all 0.3s;
-  position: relative;
-  flex-shrink: 0;
-}
-
-.stem-item.active .stem-dot {
-  background: radial-gradient(circle at 30% 30%, #fff, #e0e0e0);
-  box-shadow: 0 0 20px rgba(255, 255, 255, 0.8);
-}
-
-.stem-item.active .stem-dot::after {
-  content: '';
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent);
-  animation: pulse 2s infinite;
-}
-
-@keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    opacity: 1;
-  }
-  50% {
-    transform: scale(1.2);
-    opacity: 0.5;
-  }
-}
-
-.stem-label {
-  color: #b8b5d6;
-  font: 800 20px "Inter", sans-serif;
-  transition: color 0.2s;
-  letter-spacing: 0.5px;
-}
-
-.stem-item.active .stem-label {
-  color: #fff;
-  text-shadow: 0 0 18px rgba(255, 255, 255, 0.5);
-}
-
-.stem-label {
-  color: #b8b5d6;
-  font: 500 18px "Inter", sans-serif;
-  transition: color 0.2s;
-}
-
-.stem-item.active .stem-label {
-  color: #fff;
-}
+.dash-select:hover .dash-select-chevron { border-top-color: #fff; }
 
 .dash-waveform-container {
   flex: 1;
@@ -591,49 +592,93 @@ body {
   align-items: center;
   justify-content: flex-start;
   position: relative;
-  padding: 100px 80px 0 80px;
+  padding: 30px 40px 0 40px;  /* Adjusted padding */
+  max-width: 100%;
+  overflow: hidden;
 }
 
 .waveform-wrapper {
   width: 100%;
-  max-width: 1000px;
-  height: 200px;
+  max-width: 960px;
+  height: 600px;
   position: relative;
-  margin: 60px 0;
+  margin: 310px 0 10px 0;
+  z-index: 1001;
 }
 
-.waveform-wrapper wave {
-  border-radius: 4px;
-  overflow: hidden;
-}
-
-.waveform-wrapper canvas {
-  cursor: pointer !important;
+.waveform-wrapper wave { border-radius: 4px; overflow: hidden; }
+.waveform-wrapper canvas { 
+  cursor: pointer !important; 
   border-radius: 4px;
 }
 
-.waveform-wrapper::before {
-  content: '';
+/* Gradient background that will show through the waveform */
+.waveform-gradient-bg {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 20px;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 10, 156, 0.1) 0%,
-    rgba(192, 38, 211, 0.15) 50%,
-    rgba(124, 58, 237, 0.1) 100%
-  );
-  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg,
+    #ff0a9c 0%,
+    #ff1aac 20%,
+    #c026d3 40%,
+    #7c3aed 70%,
+    #4c1d95 100%);
   border-radius: 4px;
   z-index: 1;
 }
 
-.waveform-svg {
-  width: 100%;
-  height: 100%;
+/* Apply gradient effect to waveform container */
+.waveform-gradient-wrapper {
+  position: relative;
 }
+
+.waveform-container {
+  position: relative;
+  /* Use mix-blend-mode to apply gradient colors to white waveform */
+  mix-blend-mode: multiply;
+  filter: invert(1);
+}
+
+/* Ensure the waveform shows the gradient */
+.waveform-container wave {
+  position: relative;
+  z-index: 2;
+}
+
+/* Animated effect when playing */
+@keyframes pulseGradient {
+  0% { 
+    transform: scaleY(1);
+    filter: brightness(1) saturate(1);
+  }
+  50% { 
+    transform: scaleY(1.02);
+    filter: brightness(1.1) saturate(1.2);
+  }
+  100% { 
+    transform: scaleY(1);
+    filter: brightness(1) saturate(1);
+  }
+}
+
+.waveform-wrapper.playing .waveform-gradient-bg {
+  animation: pulseGradient 2s ease-in-out infinite;
+}
+
+/* Beat animation */
+@keyframes beatPulse {
+  0% { opacity: 0.9; }
+  50% { opacity: 1; }
+  100% { opacity: 0.9; }
+}
+
+.waveform-wrapper.playing .waveform-container {
+  animation: beatPulse 0.5s ease-in-out infinite;
+}
+
+.waveform-svg { width: 100%; height: 100%; }
 
 .waveform-time-left,
 .waveform-time-right {
@@ -645,13 +690,8 @@ body {
   z-index: 2;
 }
 
-.waveform-time-left {
-  left: -50px;
-}
-
-.waveform-time-right {
-  right: -50px;
-}
+.waveform-time-left { left: -50px; }
+.waveform-time-right { right: -50px; }
 
 .waveform-scrubber {
   position: absolute;
@@ -676,32 +716,23 @@ body {
 .waveform-clip-handle {
   position: absolute;
   top: 0;
-  height: 100%;
+  height: 100%;  /* Adjusted to match container */
   width: 20px;
   cursor: ew-resize;
   z-index: 10;
   transition: all 0.2s ease;
 }
 
-.waveform-clip-handle:hover {
-  width: 24px;
-}
-
-.waveform-clip-handle.start {
-  transform: translateX(-100%);
-}
-
-.waveform-clip-handle.start:hover {
-  transform: translateX(-100%);
-  width: 24px;
-}
+.waveform-clip-handle:hover { width: 24px; }
+.waveform-clip-handle.start { transform: translateX(-100%); }
+.waveform-clip-handle.start:hover { transform: translateX(-100%); width: 24px; }
 
 .clip-handle-cap {
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   width: 6px;
-  height: 40px;
+  height: 60px;  /* Increased height for taller waveform */
   background: linear-gradient(135deg, #ff0a9c, #c026d3, #7c3aed);
   border-radius: 3px;
   box-shadow: 0 0 12px rgba(255, 10, 156, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -715,19 +746,14 @@ body {
   background: linear-gradient(135deg, #ff1aac, #d036e3, #8c4afd);
 }
 
-.waveform-clip-handle.start .clip-handle-cap {
-  right: -1px;
-}
-
-.waveform-clip-handle.end .clip-handle-cap {
-  left: -1px;
-}
+.waveform-clip-handle.start .clip-handle-cap { right: -1px; }
+.waveform-clip-handle.end .clip-handle-cap { left: -1px; }
 
 .dash-transport {
   display: flex;
   gap: 16px;
   align-items: center;
-  margin-top: 400px;
+  margin-top: 40px;
 }
 
 .transport-btn {
@@ -765,21 +791,22 @@ body {
   margin-top: auto;
   margin-bottom: 16px;
   width: 100%;
-  height: 48px;
+  height: 40px;
   border: none;
-  border-radius: 24px;
+  border-radius: 20px;
   background: linear-gradient(135deg, #7c3aed, #c026d3);
   color: #fff;
-  font: 700 16px "Inter", sans-serif;
+  font: 700 14px "Inter", sans-serif;
   letter-spacing: 1px;
   cursor: pointer;
   transition: all 0.3s;
   position: relative;
   overflow: hidden;
-  z-index: 1;
+  z-index: 1003;
   display: flex;
   align-items: center;
   justify-content: center;
+  pointer-events: auto;
 }
 
 .split-audio-btn::before {
@@ -793,15 +820,36 @@ body {
   z-index: -1;
 }
 
-.split-audio-btn:hover::before {
-  opacity: 1;
-}
+.split-audio-btn:hover::before { opacity: 1; }
 
 .split-audio-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
 }
 
-.split-audio-btn:active {
-  transform: translateY(0);
+.split-audio-btn:active { transform: translateY(0); }
+
+/* Make the React page transparent in Electron */
+.is-electron, .is-electron body, .is-electron #root, .is-electron .App { background: transparent !important; }
+
+/* Hide the DOM pill and its input in Electron */
+.is-electron .pill-window,
+.is-electron .pill-window::before {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.is-electron .pill-input { opacity: 0 !important; }
+
+.ghost { top: 50%; transform: translateY(-50%); }
+.results-window { z-index: 3; }
+
+.loading-center {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font: 600 18px "Inter", sans-serif;
+  opacity: 0.85;
 }
