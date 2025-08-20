@@ -1,60 +1,38 @@
 {
-  "name": "splitme-frontend",
-  "version": "1.0.0",
-  "description": "SplitMe Audio Stem Separation Frontend",
+  "name": "stem-splitter-ui",
+  "version": "0.1.0",
+  "private": true,
   "main": "electron.js",
+  "dependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^13.5.0",
+    "@wavesurfer/react": "^1.0.11",
+    "framer-motion": "^11.18.2",
+    "node-fetch": "^2.7.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-scripts": "5.0.1",
+    "wavesurfer.js": "^7.10.1",
+    "web-vitals": "^2.1.4",
+    "ytdl-core": "^4.11.5",
+    "zustand": "^5.0.7"
+  },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
     "electron": "electron .",
-    "electron-dev": "ELECTRON_IS_DEV=true electron .",
-    "dist": "electron-builder",
-    "dist-win": "electron-builder --win",
-    "dist-mac": "electron-builder --mac",
-    "dist-linux": "electron-builder --linux"
+    "electron-dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 electron .\""
   },
-  "dependencies": {
-    "electron": "^27.0.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
-    "react-scripts": "5.0.1"
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
   },
-  "devDependencies": {
-    "electron-builder": "^24.6.4"
-  },
-  "build": {
-    "appId": "com.splitme.app",
-    "productName": "SplitMe - Stem Splitter",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "build/**/*",
-      "electron.js",
-      "preload.js",
-      "node_modules/**/*"
-    ],
-    "mac": {
-      "category": "public.app-category.music",
-      "target": {
-        "target": "default",
-        "arch": ["arm64", "x64"]
-      }
-    },
-    "win": {
-      "target": {
-        "target": "nsis",
-        "arch": ["x64", "ia32"]
-      }
-    },
-    "linux": {
-      "target": {
-        "target": "AppImage",
-        "arch": ["x64"]
-      }
-    }
-  },
-  "homepage": "./",
   "browserslist": {
     "production": [
       ">0.2%",
@@ -66,5 +44,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.0",
+    "cross-env": "^10.0.0",
+    "electron": "^37.2.5",
+    "wait-on": "^8.0.4"
   }
 }
