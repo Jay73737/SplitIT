@@ -38,11 +38,13 @@ The following were removed to create this clean distribution:
 
 ## Platform Support
 
-### ✅ Windows (Fully Supported)
-- **One-click setup** with automatic dependency installation
-- Run `SplitMe-Launcher-Windows.bat` - handles everything automatically
-- Creates virtual environment and installs all requirements
-- Falls back to API-only mode if Node.js not available
+### ✅ Windows (Fully Supported - PowerShell)
+- **Modern PowerShell launcher** with advanced error handling
+- **One-click setup**: `SplitMe-Launcher-Windows.bat` → PowerShell launcher
+- **Direct PowerShell**: `.\SplitMe-Launcher-Windows.ps1`
+- **Advanced features**: Parameter support, health checks, job management
+- **Automatic fallbacks**: API-only mode, dependency resolution
+- **Real-time feedback**: Progress tracking, status updates
 
 ### ✅ Mac (Dual Mode)
 - **Option 1**: Pre-built executables for instant use

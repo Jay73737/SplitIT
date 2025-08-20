@@ -4,43 +4,32 @@ echo       SplitMe Setup for Windows
 echo ========================================
 echo.
 
-echo 🔧 Setting up SplitMe for first-time use...
+echo 🔧 Running comprehensive system check...
 echo.
 
-REM Check if Python is installed
-python --version >nul 2>&1
+REM Check if PowerShell is available
+where powershell >nul 2>&1
 if %errorlevel% neq 0 (
-    echo ❌ Python not found!
-    echo.
-    echo Please install Python 3.9+ from: https://www.python.org/downloads/
-    echo Make sure to check "Add Python to PATH" during installation
-    echo.
+    echo ❌ PowerShell not found! This is unusual for Windows 10/11
+    echo Please install PowerShell or use Windows 10/11
     pause
     exit /b 1
 )
 
-echo ✅ Python found
+echo ✅ PowerShell found - launching detailed setup...
+echo.
 
-REM Check if Node.js is installed
-where node >nul 2>&1
+REM Launch PowerShell setup script
+powershell -ExecutionPolicy Bypass -File "%~dp0setup-windows.ps1"
+
 if %errorlevel% neq 0 (
-    echo ⚠️  Node.js not found
     echo.
-    echo For the full GUI experience, install Node.js from: https://nodejs.org
-    echo You can still use SplitMe in API mode without Node.js
-    echo.
+    echo ⚠️  Setup encountered an issue
+    pause
 )
 
-echo ✅ Node.js found
-
 echo.
-echo 🎉 Setup complete! You can now run:
-echo.
+echo 📖 After setup completes, run SplitMe with:
 echo    SplitMe-Launcher-Windows.bat
-echo.
-echo This will automatically:
-echo ✓ Create a Python virtual environment
-echo ✓ Install all required dependencies
-echo ✓ Start both backend and frontend
-echo.
-pause
+echo or
+echo    .\SplitMe-Launcher-Windows.ps1

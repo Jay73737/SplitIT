@@ -20,12 +20,19 @@ SplitMe uses advanced AI (Facebook's Demucs) to split songs into individual trac
 **Super Easy - One Click Setup:**
 
 1. **Double-click**: `SplitMe-Launcher-Windows.bat`
-2. **That's it!** The launcher will automatically:
-   - Check if Python is installed (prompts to install if missing)
-   - Create a virtual environment
-   - Install all dependencies
-   - Start both backend and frontend
-   - Open the SplitMe application
+2. **That's it!** The modern PowerShell launcher will automatically:
+   - Check system requirements and Python installation
+   - Create and manage Python virtual environments
+   - Install all dependencies with progress tracking
+   - Handle Node.js detection for GUI vs API-only mode
+   - Start both backend and frontend with proper error handling
+   - Provide real-time status updates and health checks
+
+**Advanced Options:**
+- **PowerShell directly**: `.\SplitMe-Launcher-Windows.ps1`
+- **API-only mode**: `.\SplitMe-Launcher-Windows.ps1 -ApiOnly`
+- **Verbose output**: `.\SplitMe-Launcher-Windows.ps1 -Verbose`
+- **System check**: `setup.bat` or `.\setup-windows.ps1`
 
 **First time setup** may take a few minutes to download dependencies.
 
