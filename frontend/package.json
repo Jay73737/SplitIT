@@ -1,0 +1,70 @@
+{
+  "name": "splitme-frontend",
+  "version": "1.0.0",
+  "description": "SplitMe Audio Stem Separation Frontend",
+  "main": "electron.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "electron": "electron .",
+    "electron-dev": "ELECTRON_IS_DEV=true electron .",
+    "dist": "electron-builder",
+    "dist-win": "electron-builder --win",
+    "dist-mac": "electron-builder --mac",
+    "dist-linux": "electron-builder --linux"
+  },
+  "dependencies": {
+    "electron": "^27.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.6.4"
+  },
+  "build": {
+    "appId": "com.splitme.app",
+    "productName": "SplitMe - Stem Splitter",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "build/**/*",
+      "electron.js",
+      "preload.js",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": {
+        "target": "default",
+        "arch": ["arm64", "x64"]
+      }
+    },
+    "win": {
+      "target": {
+        "target": "nsis",
+        "arch": ["x64", "ia32"]
+      }
+    },
+    "linux": {
+      "target": {
+        "target": "AppImage",
+        "arch": ["x64"]
+      }
+    }
+  },
+  "homepage": "./",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
