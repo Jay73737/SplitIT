@@ -114,17 +114,39 @@ function Initialize-FrontendEnvironment {
 function Start-Backend {
     Write-Host "🚀 Starting backend API server..." -ForegroundColor Green
     
-    $BackendJob = Start-Job -ScriptBlock {
-        param($ScriptDir)
-        Set-Location $ScriptDir
-        & "$ScriptDir\.venv\Scripts\python.exe" -m uvicorn api.server:app --host 0.0.0.0 --port 8000
-    } -ArgumentList $ScriptDir -Name "SplitMe-Backend"
-    
-    if ($BackendJob) {
-        Write-Host "✅ Backend server started (Job ID: $($BackendJob.Id))" -ForegroundColor Green
-        return $BackendJob
-    } else {
-        Write-Error "❌ Failed to start backend server"
+    try {
+        # Start backend in a background job
+        $BackendJob = Start-Job -ScriptBlock {
+            param($ScriptDir)
+            try {
+                Set-Location $ScriptDir
+                Write-Output "Backend: Setting location to $ScriptDir"
+                
+                # Activate virtual environment and start server
+                $ActivateScript = Join-Path $ScriptDir ".venv\Scripts\Activate.ps1"
+                if (Test-Path $ActivateScript) {
+                    Write-Output "Backend: Activating virtual environment"
+                    & $ActivateScript
+                }
+                
+                Write-Output "Backend: Starting uvicorn server"
+                & "$ScriptDir\.venv\Scripts\python.exe" -m uvicorn api.server:app --host 0.0.0.0 --port 8000
+            } catch {
+                Write-Output "Backend Error: $($_.Exception.Message)"
+                throw
+            }
+        } -ArgumentList $ScriptDir -Name "SplitMe-Backend"
+        
+        if ($BackendJob) {
+            Write-Host "✅ Backend server job started (ID: $($BackendJob.Id))" -ForegroundColor Green
+            Write-Verbose "Backend job state: $($BackendJob.State)"
+            return $BackendJob
+        } else {
+            Write-Error "❌ Failed to create backend job"
+            return $null
+        }
+    } catch {
+        Write-Error "❌ Exception starting backend: $($_.Exception.Message)"
         return $null
     }
 }
