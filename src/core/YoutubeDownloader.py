@@ -5,7 +5,7 @@ from pathlib import Path
 import json
 
 import traceback
-from GUIComponents import APIKeyWindow
+from src.ui.GUIComponents import APIKeyWindow
 from contextvars import ContextVar
 YOUTUBE_API_SERVICE_NAME = 'youtube'
 YOUTUBE_API_VERSION = 'v3'

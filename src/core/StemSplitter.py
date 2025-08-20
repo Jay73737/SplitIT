@@ -1,8 +1,7 @@
 
 import os
-from _demucs.apply import get_progress
-from _demucs.api import Separator, save_audio
-from _demucs.audio import f32_pcm
+from demucs.separate import save_audio
+from demucs import pretrained
 import torch
 import numpy as np
 from scipy.io import wavfile
