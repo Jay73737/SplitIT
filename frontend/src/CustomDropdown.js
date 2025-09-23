@@ -64,10 +64,6 @@ const CustomDropdown = ({
       <motion.div
         className={`dash-select ${isOpen ? "open" : ""}`}
         onClick={() => setIsOpen(!isOpen)}
-        whileHover={{
-          scale: 1.02,
-          backgroundColor: "#423a6d",
-        }}
         whileTap={{ scale: 0.98 }}
         transition={springConfig}
       >
@@ -113,10 +109,6 @@ const CustomDropdown = ({
                 transition={{
                   ...springConfig,
                   delay: index * 0.05,
-                }}
-                whileHover={{
-                  x: 4,
-                  backgroundColor: "rgba(255, 255, 255, 0.08)",
                 }}
                 whileTap={{ scale: 0.98 }}
               >

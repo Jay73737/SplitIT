@@ -1,9 +1,11 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import YouTubePlayer from "./YoutubePlayer";
 import WaveformPlayer from "./components/WaveformPlayer";
+import StemCardStack from "./components/StemCardStack";
 import CustomDropdown from "./CustomDropdown";
-import { downloadAudioBlob } from "./lib/downloadAudio";
+import { downloadAudioBlob, API_BASE } from "./lib/downloadAudio";
+import { startStemSplit, fetchStemSplitStatus } from "./lib/splitAudio";
 import "./App.css";
 
 export default function DashboardView({ video, onBack }) {
@@ -26,10 +28,17 @@ export default function DashboardView({ video, onBack }) {
 
   const [audioBlob, setAudioBlob] = useState(null);
   const [backendAudioUrl, setBackendAudioUrl] = useState(null);
+  const [backendAudioId, setBackendAudioId] = useState(null);
   const [audioLoading, setAudioLoading] = useState(false);
+  const [audioError, setAudioError] = useState(null);
   const abortRef = useRef(null);
   const [waveformInstance, setWaveformInstance] = useState(null);
   const [waveformPlaying, setWaveformPlaying] = useState(false);
+  const [splitJobId, setSplitJobId] = useState(null);
+  const [splitStatus, setSplitStatus] = useState("idle");
+  const [splitError, setSplitError] = useState(null);
+  const [splitResults, setSplitResults] = useState([]);
+  const splitPollRef = useRef(null);
 
   // Load audio from backend for accurate waveform
   useEffect(() => {
@@ -39,16 +48,44 @@ export default function DashboardView({ video, onBack }) {
   }, [backendAudioUrl]);
 
   useEffect(() => {
+    return () => {
+      if (splitPollRef.current) {
+        clearInterval(splitPollRef.current);
+        splitPollRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (splitPollRef.current) {
+      clearInterval(splitPollRef.current);
+      splitPollRef.current = null;
+    }
+
+    setSplitJobId(null);
+    setSplitStatus("idle");
+    setSplitError(null);
+    setSplitResults([]);
+
     if (video?.isLocalFile) {
       // For local files, use the existing file URL
       setBackendAudioUrl(video.filePath);
       setAudioBlob(video.file);
+      setAudioError(null);
+      setBackendAudioId(null);
+      setWaveformInstance(null);
+      setWaveformPlaying(false);
       return;
     }
 
     if (!video?.id) {
       if (backendAudioUrl) URL.revokeObjectURL(backendAudioUrl);
       setBackendAudioUrl(null);
+      setAudioBlob(null);
+      setAudioError(null);
+      setBackendAudioId(null);
+      setWaveformInstance(null);
+      setWaveformPlaying(false);
       return;
     }
 
@@ -58,19 +95,32 @@ export default function DashboardView({ video, onBack }) {
 
     const loadBackendAudio = async () => {
       setAudioLoading(true);
+      setAudioError(null);
+      setAudioBlob(null);
+      setWaveformInstance(null);
+      setWaveformPlaying(false);
       try {
         const youtubeUrl = `https://www.youtube.com/watch?v=${video.id}`;
-        const { objectUrl } = await downloadAudioBlob(
+        const { objectUrl, blob, id } = await downloadAudioBlob(
           youtubeUrl,
           "mp3",
           abortRef.current.signal
         );
         if (backendAudioUrl) URL.revokeObjectURL(backendAudioUrl);
         setBackendAudioUrl(objectUrl);
+        setAudioBlob(blob);
+        setBackendAudioId(id);
       } catch (err) {
-        if (err.name !== "AbortError") {
-          console.error("Failed to load backend audio:", err);
+        if (err.name === "AbortError") {
+          return;
         }
+        console.error("Failed to load backend audio:", err);
+        if (backendAudioUrl) URL.revokeObjectURL(backendAudioUrl);
+        setBackendAudioUrl(null);
+        setAudioError(err.message || "Failed to load waveform audio.");
+        setBackendAudioId(null);
+        setWaveformInstance(null);
+        setWaveformPlaying(false);
       } finally {
         setAudioLoading(false);
       }
@@ -82,6 +132,110 @@ export default function DashboardView({ video, onBack }) {
       abortRef.current?.abort();
     };
   }, [video?.id, video?.isLocalFile]);
+
+  const handleWaveformReady = useCallback((instance) => {
+    setWaveformInstance(instance);
+  }, []);
+
+  const handleWaveformPlayStateChange = useCallback((playingState) => {
+    setWaveformPlaying(playingState);
+  }, []);
+
+  const beginSplitPolling = useCallback((jobId) => {
+    const poll = async () => {
+      try {
+        const data = await fetchStemSplitStatus(jobId);
+        if (!data) return;
+        if (data.status === "completed") {
+          const results = (data.results || []).map((item) => ({
+            ...item,
+            streamUrl: `${API_BASE}${item.streamUrl}`,
+          }));
+          setSplitResults(results);
+          setSplitStatus("completed");
+          clearInterval(splitPollRef.current);
+          splitPollRef.current = null;
+        } else if (data.status === "error") {
+          setSplitStatus("error");
+          setSplitError(data.error || "Stem split failed.");
+          clearInterval(splitPollRef.current);
+          splitPollRef.current = null;
+        } else {
+          setSplitStatus("processing");
+        }
+      } catch (err) {
+        console.error("Stem split status error:", err);
+        setSplitStatus("error");
+        setSplitError(err.message || "Unable to retrieve stem split status.");
+        clearInterval(splitPollRef.current);
+        splitPollRef.current = null;
+      }
+    };
+
+    poll();
+    splitPollRef.current = window.setInterval(poll, 2500);
+  }, []);
+
+  const handleSplitAudio = useCallback(async () => {
+    if (splitStatus === "processing") return;
+
+    const selectedStems = Object.entries(stems)
+      .filter(([, enabled]) => enabled)
+      .map(([name]) => name);
+
+    if (!selectedStems.length) {
+      setSplitError("Select at least one stem to split.");
+      return;
+    }
+
+    if (!backendAudioId) {
+      setSplitError(
+        video?.isLocalFile
+          ? "Stem splitting for local files is not yet available."
+          : "Audio must finish downloading before splitting. Please wait for the waveform to load."
+      );
+      return;
+    }
+
+    try {
+      if (splitPollRef.current) {
+        clearInterval(splitPollRef.current);
+        splitPollRef.current = null;
+      }
+
+      setSplitError(null);
+      setSplitResults([]);
+      setSplitStatus("processing");
+
+      const payload = {
+        audioId: backendAudioId,
+        stems: selectedStems,
+        model: aiModel || "ht-demucs-v4",
+      };
+
+      const { jobId, status } = await startStemSplit(payload);
+      setSplitJobId(jobId);
+      setSplitStatus(status || "processing");
+      beginSplitPolling(jobId);
+    } catch (err) {
+      if (err.name === "AbortError") return;
+      console.error("Failed to start stem split:", err);
+      setSplitStatus("error");
+      setSplitError(err.message || "Unable to start stem splitting.");
+    }
+  }, [aiModel, backendAudioId, beginSplitPolling, splitStatus, stems, video?.isLocalFile]);
+
+  const showStemStack = splitStatus === "completed" && splitResults.length > 0;
+
+  useEffect(() => {
+    if (showStemStack && waveformInstance?.pause) {
+      try {
+        waveformInstance.pause();
+      } catch (err) {
+        /* ignore pause errors */
+      }
+    }
+  }, [showStemStack, waveformInstance]);
 
   if (!video) return null;
 
@@ -192,37 +346,20 @@ export default function DashboardView({ video, onBack }) {
 
           <button
             className="split-audio-btn"
-            onClick={() => {
-              if (!backendAudioUrl && !audioBlob) {
-                alert(
-                  "Audio not available. The waveform must load successfully before splitting. Try a different video or check if the video is geo-restricted."
-                );
-                return;
-              }
-              console.log("Ready to process audio:", {
-                backendAudioUrl,
-                audioBlob,
-              });
-            }}
+            onClick={handleSplitAudio}
+            disabled={splitStatus === "processing" || audioLoading}
           >
-            SPLIT AUDIO
+            {splitStatus === "processing" ? "SPLITTING..." : "SPLIT AUDIO"}
           </button>
         </div>
 
         <div className="dash-waveform-container">
-          <div className="waveform-time-left">{formatTime(current)}</div>
+          {!showStemStack && (
+            <div className="waveform-time-left">{formatTime(current)}</div>
+          )}
 
           {/* New backend-powered accurate waveform */}
-          <div
-            className="waveform-wrapper"
-            style={{
-              width: "100%",
-              height: "120px",
-              position: "relative",
-              margin: "20px 0",
-              zIndex: 1001,
-            }}
-          >
+          <div className={`waveform-wrapper${showStemStack ? " stems" : ""}`}>
             {audioLoading && (
               <div
                 style={{
@@ -238,16 +375,29 @@ export default function DashboardView({ video, onBack }) {
               </div>
             )}
 
-            {!audioLoading && backendAudioUrl && (
-              <WaveformPlayer
-                url={backendAudioUrl}
-                height={80} /* Even smaller height for very compact dashboard */
-                onWaveformReady={(instance) => setWaveformInstance(instance)}
-                onPlayStateChange={(playing) => setWaveformPlaying(playing)}
+            {!audioLoading && showStemStack && (
+              <StemCardStack
+                stems={splitResults}
+                artist={video.channel || video.title || ""}
               />
             )}
 
-            {!audioLoading && !backendAudioUrl && (
+            {!audioLoading && !showStemStack && splitStatus === "processing" && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  color: "#fff",
+                  fontSize: "12px",
+                }}
+              >
+                Splitting stems… this can take a minute.
+              </div>
+            )}
+
+            {!audioLoading && splitStatus === "error" && splitError && (
               <div
                 style={{
                   display: "flex",
@@ -256,71 +406,117 @@ export default function DashboardView({ video, onBack }) {
                   height: "100%",
                   color: "#ff6b6b",
                   fontSize: "10px",
+                  textAlign: "center",
+                  padding: "0 12px",
                 }}
               >
-                Failed to load waveform. Please try again.
+                {splitError}
               </div>
             )}
-          </div>
 
-          <div className="waveform-time-right">{formatTime(duration)}</div>
+            {!audioLoading && !showStemStack && splitStatus !== "processing" && !splitError && backendAudioUrl && !audioError && (
+              <WaveformPlayer
+                url={backendAudioUrl}
+                blob={audioBlob}
+                height={80} /* Even smaller height for very compact dashboard */
+                onWaveformReady={handleWaveformReady}
+                onPlayStateChange={handleWaveformPlayStateChange}
+              />
+            )}
 
-          <div className="dash-transport">
-            <button className="transport-btn" onClick={() => seek(current - 5)}>
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+            {!audioLoading && audioError && (
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  height: "100%",
+                  color: "#ff6b6b",
+                  fontSize: "10px",
+                  textAlign: "center",
+                }}
               >
-                <path d="M16 15V5l-3.5 2.5L9 10l3.5 2.5L16 15zm-7 0V5l-3.5 2.5L2 10l3.5 2.5L9 15z" />
-              </svg>
-            </button>
-            <button
-              className="transport-btn play"
-              onClick={() => {
-                if (waveformInstance) {
-                  // Use waveform for playback control
-                  waveformInstance.playPause();
-                } else if (video.isLocalFile) {
-                  playing ? ytRef.current?.pause() : ytRef.current?.play();
-                } else {
-                  playing ? ytRef.current?.pause() : ytRef.current?.play();
-                }
+                {audioError}
+              </div>
+            )}
+
+          {!audioLoading && !showStemStack && splitStatus !== "processing" && !splitError && !audioError && !backendAudioUrl && (
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                height: "100%",
+                color: "#ff6b6b",
+                fontSize: "10px",
               }}
             >
-              {(waveformInstance ? waveformPlaying : playing) ? (
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <rect x="6" y="4" width="4" height="16" rx="1" />
-                  <rect x="14" y="4" width="4" height="16" rx="1" />
-                </svg>
-              ) : (
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </button>
-            <button className="transport-btn" onClick={() => seek(current + 5)}>
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path d="M4 5v10l3.5-2.5L11 10l-3.5-2.5L4 5zm7 0v10l3.5-2.5L18 10l-3.5-2.5L11 5z" />
-              </svg>
-            </button>
+              Failed to load waveform. Please try again.
+            </div>
+          )}
           </div>
+
+          {!showStemStack && (
+            <>
+              <div className="waveform-time-right">{formatTime(duration)}</div>
+
+              <div className="dash-transport">
+                <button className="transport-btn" onClick={() => seek(current - 5)}>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M16 15V5l-3.5 2.5L9 10l3.5 2.5L16 15zm-7 0V5l-3.5 2.5L2 10l3.5 2.5L9 15z" />
+                  </svg>
+                </button>
+                <button
+                  className="transport-btn play"
+                  onClick={() => {
+                    if (waveformInstance) {
+                      waveformInstance.playPause();
+                    } else if (video.isLocalFile) {
+                      playing ? ytRef.current?.pause() : ytRef.current?.play();
+                    } else {
+                      playing ? ytRef.current?.pause() : ytRef.current?.play();
+                    }
+                  }}
+                >
+                  {(waveformInstance ? waveformPlaying : playing) ? (
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <rect x="6" y="4" width="4" height="16" rx="1" />
+                      <rect x="14" y="4" width="4" height="16" rx="1" />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="24"
+                      height="24"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  )}
+                </button>
+                <button className="transport-btn" onClick={() => seek(current + 5)}>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M4 5v10l3.5-2.5L11 10l-3.5-2.5L4 5zm7 0v10l3.5-2.5L18 10l-3.5-2.5L11 5z" />
+                  </svg>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

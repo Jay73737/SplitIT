@@ -506,11 +506,6 @@ body {
   border-radius: 14px;
 }
 
-.dash-option:hover {
-  background: rgba(10, 8, 28, 0.55);  /* darker tint */
-  color: #e6e2ff;                     /* gentle lift */
-}
-
 .dash-option.selected {
   background: rgba(12, 10, 36, 0.7);  /* darker selected */
   color: #e3ddff;
@@ -578,13 +573,6 @@ body {
   transform: translateY(-50%) rotate(180deg);
 }
 
-.dash-select:hover {
-  background: #423a6d;
-  color: #fff;
-}
-
-.dash-select:hover .dash-select-chevron { border-top-color: #fff; }
-
 .dash-waveform-container {
   flex: 1;
   display: flex;
@@ -592,7 +580,7 @@ body {
   align-items: center;
   justify-content: flex-start;
   position: relative;
-  padding: 30px 40px 0 40px;  /* Adjusted padding */
+  padding: 80px 40px 0 40px;
   max-width: 100%;
   overflow: hidden;
 }
@@ -600,10 +588,19 @@ body {
 .waveform-wrapper {
   width: 100%;
   max-width: 960px;
-  height: 600px;
   position: relative;
-  margin: 310px 0 10px 0;
+  margin: 80px 0 24px 0;
   z-index: 1001;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+}
+
+.waveform-wrapper.stems {
+  max-width: 520px;
+  margin: 40px 0 32px 0;
 }
 
 .waveform-wrapper wave { border-radius: 4px; overflow: hidden; }
@@ -753,7 +750,125 @@ body {
   display: flex;
   gap: 16px;
   align-items: center;
+  justify-content: center;
   margin-top: 40px;
+}
+
+.stem-stack {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  gap: 18px;
+  margin-left: -340px;
+}
+
+.stem-stack-inner {
+  position: relative;
+  width: min(420px, 90%);
+  min-height: 220px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: -60px;
+  perspective: 800px;
+  margin-bottom: 12px;
+}
+
+.stem-card {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform-origin: center;
+  width: 100%;
+  max-width: 420px;
+  min-height: 200px;
+  border-radius: 26px;
+  padding: 28px;
+  box-sizing: border-box;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+  transition: transform 0.28s ease, opacity 0.28s ease;
+  pointer-events: auto;
+  color: #f8f5ff;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transform: translateX(-50%);
+}
+
+.stem-card.active {
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.45);
+}
+
+.stem-card.playing {
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.stem-card-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  gap: 16px;
+}
+
+.stem-card-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stem-card-title {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.stem-card-artist {
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.stem-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.stem-card-time {
+  font-size: 13px;
+  opacity: 0.85;
+}
+
+.stem-card-play {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(8, 8, 15, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, background 0.2s ease;
+}
+
+.stem-card-play:hover {
+  transform: scale(1.05);
+  background: rgba(8, 8, 15, 0.92);
+}
+
+.stem-card-play svg {
+  display: block;
 }
 
 .transport-btn {
@@ -852,4 +967,14 @@ body {
   color: #fff;
   font: 600 18px "Inter", sans-serif;
   opacity: 0.85;
+}
+
+.stem-stack-instructions {
+  margin-top: 16px;
+  margin-left: 220px;
+  font-size: 14px;
+  letter-spacing: 0.4px;
+  color: rgba(248, 245, 255, 0.6);
+  text-align: right;
+  align-self: flex-start;
 }

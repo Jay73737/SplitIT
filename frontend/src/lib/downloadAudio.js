@@ -1,6 +1,25 @@
 export const API_BASE = process.env.REACT_APP_API_BASE ?? "http://localhost:5050";
 
-/** Ask backend to download audio, then fetch the bytes and give a Blob URL */
+async function readError(response, fallbackMessage) {
+  try {
+    const data = await response.clone().json();
+    const detail = data?.detail ?? data?.error ?? data?.message;
+    if (detail) return detail;
+  } catch (err) {
+    /* ignore JSON parse errors */
+  }
+
+  try {
+    const text = await response.text();
+    if (text) return text;
+  } catch (err) {
+    /* ignore body read errors */
+  }
+
+  return fallbackMessage;
+}
+
+/** Ask backend to download audio, then fetch the bytes and give back a Blob + object URL */
 export async function downloadAudioBlob(
   sourceUrl,
   format = "mp3",
@@ -12,21 +31,21 @@ export async function downloadAudioBlob(
     body: JSON.stringify({ sourceUrl, format }),
     signal,
   });
-  
+
   if (!metaRes.ok) {
-    const errorText = await metaRes.text();
-    throw new Error(`download-audio failed: ${errorText}`);
+    const message = await readError(metaRes, "download-audio failed");
+    throw new Error(message);
   }
-  
+
   const meta = await metaRes.json();
 
   const audioRes = await fetch(`${API_BASE}${meta.streamUrl}`, { signal });
   if (!audioRes.ok) {
-    const errorText = await audioRes.text();
-    throw new Error(`audio fetch failed: ${errorText}`);
+    const message = await readError(audioRes, "audio fetch failed");
+    throw new Error(message);
   }
-  
+
   const blob = await audioRes.blob();
   const objectUrl = URL.createObjectURL(blob);
-  return { objectUrl, mime: meta.mime, id: meta.id };
+  return { objectUrl, blob, mime: meta.mime, id: meta.id };
 }
