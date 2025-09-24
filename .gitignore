@@ -11,3 +11,4 @@
 .gitignore
 dist/
 frontend/dist/
+data/

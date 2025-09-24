@@ -16,4 +16,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onPillSubmit: (fn) => ipcRenderer.on("pill:submit", (_e, v) => fn(v)),
   resultsOpened: (height) => ipcRenderer.send("results-opened", height),
   resultsClosed: () => ipcRenderer.send("results-closed"),
+  downloadStems: (payload) => ipcRenderer.invoke("stems:download-all", payload),
+  dragStem: (payload) => ipcRenderer.send("stems:drag-file", payload),
 });

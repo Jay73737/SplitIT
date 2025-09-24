@@ -788,7 +788,7 @@ body {
   width: 100%;
   max-width: 420px;
   min-height: 200px;
-  border-radius: 26px;
+  border-radius: 24px;
   padding: 28px;
   box-sizing: border-box;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
@@ -816,7 +816,6 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: 100%;
   gap: 16px;
 }
 
@@ -838,15 +837,25 @@ body {
 }
 
 .stem-card-footer {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .stem-card-time {
   font-size: 13px;
   opacity: 0.85;
+  align-self: auto;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  position: relative;
+  top: 1px;
 }
 
 .stem-card-play {
@@ -977,4 +986,139 @@ body {
   color: rgba(248, 245, 255, 0.6);
   text-align: right;
   align-self: flex-start;
+}
+
+.stem-stack-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  align-self: flex-end;
+}
+
+.stem-stack.expanded {
+  max-width: 1080px;
+  margin: 0 auto;
+  align-items: center;
+  gap: 24px;
+}
+
+.stem-stack.expanded .stem-stack-inner {
+  position: relative;
+  width: 100%;
+  margin-left: 0;
+  min-height: unset;
+  perspective: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+.stem-stack.expanded .stem-stack-actions {
+  margin-top: 0;
+}
+
+.stem-stack.expanded .stem-stack-inner .stem-card.expanded {
+  position: relative;
+  left: 0;
+  transform: none !important;
+  opacity: 1 !important;
+  z-index: auto;
+  flex: 0 0 280px;
+  width: 280px;
+  height: 180px;
+  max-width: 280px;
+  border-radius: 24px;
+}
+
+.stem-grid-row {
+  display: flex;
+  width: 100%;
+  gap: 32px;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.stem-grid-row.full {
+  justify-content: center;
+}
+
+.stem-grid-row.centered {
+  justify-content: center;
+}
+
+@media (max-width: 1280px) {
+  .stem-stack.expanded {
+    max-width: 960px;
+  }
+
+  .stem-stack.expanded .stem-stack-inner .stem-card.expanded {
+    flex: 0 0 280px;
+    width: 280px;
+  }
+
+  .stem-grid-row.full {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 860px) {
+  .stem-stack.expanded {
+    max-width: 360px;
+  }
+
+  .stem-grid-row {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+}
+
+.stem-action-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px;
+  background: rgba(18, 18, 38, 0.78);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  transition: opacity 0.2s ease;
+}
+
+.stem-action-pill.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.stem-pill-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: #f3e8ff;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.stem-pill-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.stem-pill-divider {
+  width: 1px;
+  height: 24px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+
+.stem-pill-status {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  letter-spacing: 0.02em;
 }

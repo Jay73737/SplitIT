@@ -1,8 +1,31 @@
 // electron.js — main process
 const path = require("path");
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, shell, nativeImage } = require("electron");
 const { spawn } = require("child_process");
 const fetch = require("node-fetch");
+const fs = require("fs");
+
+function logMain(message, extra = null) {
+  try {
+    const base = app?.isReady?.() ? app.getPath("userData") : __dirname;
+    const logFile = path.join(base, "splitme-main.log");
+    const line = `[${new Date().toISOString()}] ${message}${
+      extra ? ` ${JSON.stringify(extra)}` : ""
+    }\n`;
+    fs.appendFileSync(logFile, line, "utf8");
+  } catch (err) {
+    console.error("Failed to write main log", err);
+  }
+}
+
+function sanitizeFileName(name, fallback = "SplitMe Stems") {
+  const safe = (name || "")
+    .toString()
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, " ")
+    .trim();
+  return safe.length ? safe : fallback;
+}
 
 const isMac = process.platform === "darwin";
 const isWin = process.platform === "win32";
@@ -51,7 +74,6 @@ async function startBackendServer() {
   } else {
     // Check if uvicorn exists in the venv, otherwise use python -m
     const uvicornPath = path.join(backendDir, ".venv", "bin", "uvicorn");
-    const fs = require("fs");
 
     if (fs.existsSync(uvicornPath)) {
       uvicornCmd = uvicornPath;
@@ -169,6 +191,15 @@ function createMainWindow() {
 
   if (isDev) mainWin.loadURL("http://localhost:3000");
   else mainWin.loadFile(path.join(app.getAppPath(), "build", "index.html"));
+
+  mainWin.webContents.on("render-process-gone", (_event, details) => {
+    const info = {
+      reason: details.reason,
+      exitCode: details.exitCode,
+    };
+    console.error("Renderer process crashed", JSON.stringify(info));
+    logMain("renderer-crashed", info);
+  });
 
   mainWin.on("closed", () => {
     mainWin = null;
@@ -343,12 +374,71 @@ ipcMain.on("pill:submit", (_evt, value) => {
   if (mainWin) mainWin.webContents.send("pill:submit", value ?? "");
 });
 
+ipcMain.handle("stems:download-all", async (_event, payload = {}) => {
+  if (!payload.stems || !Array.isArray(payload.stems) || payload.stems.length === 0) {
+    return { ok: false, error: "No stems provided" };
+  }
+
+  try {
+    const downloadsDir = app.getPath("downloads");
+    const folderName = sanitizeFileName(payload.title, "SplitMe Stems");
+    const targetDir = path.join(downloadsDir, folderName);
+    await fs.promises.mkdir(targetDir, { recursive: true });
+
+    for (const stem of payload.stems) {
+      if (!stem?.streamUrl) continue;
+      const response = await fetch(stem.streamUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch stem: ${stem?.stem || "stem"}`);
+      }
+      const buffer = await response.buffer();
+      const ext = sanitizeFileName(stem.format || "mp3", "mp3").toLowerCase();
+      const basename = sanitizeFileName(stem.stem || "stem");
+      const filePath = path.join(targetDir, `${basename}.${ext}`);
+      await fs.promises.writeFile(filePath, buffer);
+    }
+
+    shell.showItemInFolder?.(targetDir);
+    logMain("stems-downloaded", { targetDir, count: payload.stems.length });
+    return { ok: true, path: targetDir };
+  } catch (error) {
+    logMain("stems-download-error", { message: error.message });
+    return { ok: false, error: error.message };
+  }
+});
+
+ipcMain.on("stems:drag-file", (event, payload = {}) => {
+  try {
+    const { filePath, displayName } = payload;
+    if (!filePath) {
+      throw new Error("Missing file path");
+    }
+
+    const resolved = path.resolve(filePath);
+    if (!fs.existsSync(resolved)) {
+      throw new Error("Stem file does not exist");
+    }
+
+    const icon = nativeImage.createEmpty();
+    event.sender.startDrag({
+      file: resolved,
+      icon,
+      title: typeof displayName === "string" ? displayName : undefined,
+    });
+    logMain("stems-drag", { path: resolved });
+  } catch (error) {
+    logMain("stems-drag-error", { message: error.message });
+  }
+});
+
 // Optional no-ops for your existing calls
 ipcMain.on("results-opened", () => {});
 ipcMain.on("results-closed", () => {});
 
 app.whenReady().then(async () => {
   try {
+    logMain("app-ready", { userData: app.getPath("userData") });
+
     // Start backend server first
     await startBackendServer();
 

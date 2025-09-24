@@ -205,7 +205,12 @@ def _run_split_job(
         # Apply the model
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
-        sources = apply_model(model, wav[None], device='cpu')[0]
+        sources = apply_model(
+            model,
+            wav[None],
+            device='cpu',
+            progress=False,
+        )[0]
 
         # Get the sample rate from the model
         sample_rate = model.samplerate
@@ -225,10 +230,17 @@ def _run_split_job(
             if i >= sources.shape[0]:
                 continue
 
-            output_path = job_dir / f"{stem_name}.wav"
+            output_path = job_dir / f"{stem_name}.mp3"
 
-            # Save the audio tensor using demucs save_audio
-            save_audio(sources[i], str(output_path), sample_rate, as_float=True)
+            # Persist stems as mp3 to dramatically reduce size while keeping quality reasonable
+            save_audio(
+                sources[i],
+                str(output_path),
+                sample_rate,
+                bitrate=192,
+                preset=4,
+                clip="rescale",
+            )
 
             duration_seconds = float(sources[i].shape[-1] / sample_rate)
             results.append(
@@ -236,6 +248,7 @@ def _run_split_job(
                     "stem": stem_name,
                     "duration": duration_seconds,
                     "path": str(output_path),
+                    "format": output_path.suffix.lstrip("."),
                 }
             )
 
@@ -357,6 +370,8 @@ def split_audio_status(job_id: str):
                 {
                     "stem": item.get("stem"),
                     "duration": item.get("duration"),
+                    "format": item.get("format", "mp3"),
+                    "filePath": item.get("path"),
                     "streamUrl": f"/api/split-audio/{job_id}/stems/{item.get('stem')}",
                 }
             )
@@ -385,9 +400,11 @@ def get_split_stem(job_id: str, stem_name: str):
             path = Path(path_str)
             if not path.exists():
                 raise HTTPException(status_code=404, detail="Stem file not found")
+            suffix = path.suffix.lower()
+            media_type = "audio/mpeg" if suffix == ".mp3" else "audio/wav"
             return FileResponse(
                 path=str(path),
-                media_type="audio/wav",
+                media_type=media_type,
                 filename=path.name,
             )
 

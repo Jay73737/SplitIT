@@ -39,6 +39,8 @@ export default function DashboardView({ video, onBack }) {
   const [splitError, setSplitError] = useState(null);
   const [splitResults, setSplitResults] = useState([]);
   const splitPollRef = useRef(null);
+  const [expandedStems, setExpandedStems] = useState(false);
+  const [downloadingAll, setDownloadingAll] = useState(false);
 
   // Load audio from backend for accurate waveform
   useEffect(() => {
@@ -228,6 +230,62 @@ export default function DashboardView({ video, onBack }) {
   const showStemStack = splitStatus === "completed" && splitResults.length > 0;
 
   useEffect(() => {
+    if (!showStemStack) {
+      setExpandedStems(false);
+    }
+  }, [showStemStack]);
+
+  const handleDownloadAll = useCallback(async () => {
+    if (!splitResults.length || downloadingAll) return;
+    setDownloadingAll(true);
+    setSplitError(null);
+    try {
+      const payload = {
+        title: video?.title || "SplitMe Stems",
+        stems: splitResults.map((stem) => ({
+          stem: stem.stem,
+          streamUrl: stem.streamUrl,
+          format: stem.format || "mp3",
+        })),
+      };
+
+      if (window?.electronAPI?.downloadStems) {
+        const result = await window.electronAPI.downloadStems(payload);
+        if (result && result.ok === false) {
+          throw new Error(result.error || "Download failed");
+        }
+      } else {
+        for (const item of payload.stems) {
+          const response = await fetch(item.streamUrl);
+          if (!response.ok) {
+            throw new Error("Failed to download stem");
+          }
+          const blob = await response.blob();
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement("a");
+          const safeTitle = (payload.title || "Stem").replace(/[\\/:*?"<>|]+/g, "-");
+          const filename = `${safeTitle}-${item.stem}.${item.format || "mp3"}`;
+          link.href = url;
+          link.download = filename;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          URL.revokeObjectURL(url);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to download stems:", err);
+      setSplitError(err.message || "Unable to download stems.");
+    } finally {
+      setDownloadingAll(false);
+    }
+  }, [downloadingAll, splitResults, video?.title]);
+
+  const handleToggleExpanded = useCallback(() => {
+    setExpandedStems((prev) => !prev);
+  }, []);
+
+  useEffect(() => {
     if (showStemStack && waveformInstance?.pause) {
       try {
         waveformInstance.pause();
@@ -379,6 +437,10 @@ export default function DashboardView({ video, onBack }) {
               <StemCardStack
                 stems={splitResults}
                 artist={video.channel || video.title || ""}
+                onDownloadAll={handleDownloadAll}
+                onToggleExpand={handleToggleExpanded}
+                expanded={expandedStems}
+                downloading={downloadingAll}
               />
             )}
 
@@ -567,6 +629,7 @@ export default function DashboardView({ video, onBack }) {
           }}
         />
       )}
+
     </motion.div>
   );
 }
