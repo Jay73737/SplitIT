@@ -3,6 +3,9 @@ import uuid
 import shutil
 import tempfile
 import threading
+import time
+import logging
+import inspect
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional, List, Dict, Any
@@ -16,11 +19,20 @@ from demucs import pretrained
 from demucs.separate import apply_model, save_audio, load_track
 import torch
 
+PROJECT_ROOT = Path(os.environ.get("SPLITME_APP_ROOT", Path(__file__).resolve().parents[1]))
+logger = logging.getLogger("splitme.api")
+
+STORAGE_BASE = Path(
+    os.environ.get("SPLITME_STORAGE_DIR")
+    or os.environ.get("SPLITME_USER_DATA_DIR")
+    or (PROJECT_ROOT / "data")
+).expanduser().resolve()
+
 # Where we cache downloaded/converted audio
-DATA_DIR = Path("./data/audio_cache")
+DATA_DIR = (STORAGE_BASE / "audio_cache").resolve()
 DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-STEMS_DIR = Path("./data/stem_cache")
+STEMS_DIR = (STORAGE_BASE / "stem_cache").resolve()
 STEMS_DIR.mkdir(parents=True, exist_ok=True)
 
 SUPPORTED_FORMATS = {
@@ -59,6 +71,10 @@ class SplitAudioReq(BaseModel):
     audioId: str
     stems: List[str]
     model: Optional[str] = "ht-demucs-v4"
+    startSeconds: Optional[float] = None
+    endSeconds: Optional[float] = None
+    overlap: Optional[float] = None
+    shifts: Optional[int] = None
 
 
 def _looks_like_audio(header: bytes) -> bool:
@@ -89,67 +105,86 @@ def _looks_like_audio(header: bytes) -> bool:
     return False
 
 
+def _is_broken_pipe_error(exc: Exception) -> bool:
+    if isinstance(exc, BrokenPipeError):
+        return True
+    if isinstance(exc, OSError) and getattr(exc, "errno", None) == 32:
+        return True
+    message = str(exc).lower()
+    return "broken pipe" in message or "epipe" in message
+
+
 def _download_audio_to_cache(src_url: str, fmt: str) -> Path:
     fmt = (fmt or "mp3").lower()
     if fmt not in SUPPORTED_FORMATS:
         raise RuntimeError(f"Unsupported audio format '{fmt}'.")
 
-    uid = str(uuid.uuid4())
     expected_suffix = SUPPORTED_FORMATS[fmt]
     ext = expected_suffix.lstrip(".")
-    final_path = DATA_DIR / f"{uid}{expected_suffix}"
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        outtmpl = str(Path(tmpdir) / f"%(id)s.%(ext)s")
-        ydl_opts = {
-            "format": "bestaudio/best",
-            "outtmpl": outtmpl,
-            "quiet": True,
-            "noprogress": True,
-            "postprocessors": [
-                {
-                    "key": "FFmpegExtractAudio",
-                    "preferredcodec": ext,
-                    "preferredquality": "192",
+    for attempt in range(2):
+        uid = str(uuid.uuid4())
+        final_path = DATA_DIR / f"{uid}{expected_suffix}"
+        try:
+            with tempfile.TemporaryDirectory() as tmpdir:
+                outtmpl = str(Path(tmpdir) / f"%(id)s.%(ext)s")
+                ydl_opts = {
+                    "format": "bestaudio/best",
+                    "outtmpl": outtmpl,
+                    "quiet": True,
+                    "noprogress": True,
+                    "retries": 3,
+                    "fragment_retries": 3,
+                    "postprocessors": [
+                        {
+                            "key": "FFmpegExtractAudio",
+                            "preferredcodec": ext,
+                            "preferredquality": "192",
+                        }
+                    ],
                 }
-            ],
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(src_url, download=True)
-            produced = None
-            if "requested_downloads" in info and info["requested_downloads"]:
-                produced = info["requested_downloads"][0].get("filepath")
-            if not produced:
-                for p in Path(tmpdir).glob(f"*.{ext}"):
-                    produced = str(p)
-                    break
-            if not produced or not os.path.exists(produced):
-                raise RuntimeError("Audio conversion failed; no output found.")
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(src_url, download=True)
+                    produced = None
+                    if "requested_downloads" in info and info["requested_downloads"]:
+                        produced = info["requested_downloads"][0].get("filepath")
+                    if not produced:
+                        for p in Path(tmpdir).glob(f"*.{ext}"):
+                            produced = str(p)
+                            break
+                    if not produced or not os.path.exists(produced):
+                        raise RuntimeError("Audio conversion failed; no output found.")
 
-            produced_path = Path(produced)
-            try:
-                with produced_path.open("rb") as fh:
-                    header = fh.read(32)
-            except OSError:
-                header = b""
+                    produced_path = Path(produced)
+                    try:
+                        with produced_path.open("rb") as fh:
+                            header = fh.read(32)
+                    except OSError:
+                        header = b""
 
-            if not _looks_like_audio(header):
-                produced_path.unlink(missing_ok=True)
-                raise RuntimeError(
-                    "Downloaded data is not an audio stream. The video may have audio downloads disabled."
-                )
+                    if not _looks_like_audio(header):
+                        produced_path.unlink(missing_ok=True)
+                        raise RuntimeError(
+                            "Downloaded data is not an audio stream. The video may have audio downloads disabled."
+                        )
 
-            actual_suffix = produced_path.suffix.lower()
-            if actual_suffix != expected_suffix:
-                produced_path.unlink(missing_ok=True)
-                raise RuntimeError(
-                    "Audio conversion did not produce the requested format. "
-                    "Ensure FFmpeg is installed and accessible."
-                )
+                    actual_suffix = produced_path.suffix.lower()
+                    if actual_suffix != expected_suffix:
+                        produced_path.unlink(missing_ok=True)
+                        raise RuntimeError(
+                            "Audio conversion did not produce the requested format. "
+                            "Ensure FFmpeg is installed and accessible."
+                        )
 
-            shutil.move(str(produced_path), final_path)
+                    shutil.move(str(produced_path), final_path)
 
-    return final_path
+            return final_path
+        except Exception as exc:  # noqa: BLE001
+            if _is_broken_pipe_error(exc) and attempt < 1:
+                logger.warning("Broken pipe during download; retrying once.")
+                time.sleep(0.4)
+                continue
+            raise
 
 
 VALID_STEMS = {"vocals", "drums", "bass", "guitar", "piano", "other"}
@@ -190,6 +225,10 @@ def _run_split_job(
     requested_stems: List[str],
     model_alias: str,
     model_key: str,
+    start_seconds: Optional[float],
+    end_seconds: Optional[float],
+    overlap: Optional[float],
+    shifts: Optional[int],
 ) -> None:
     _set_job_state(job_id, status="processing")
     try:
@@ -202,15 +241,48 @@ def _run_split_job(
         # Load the audio track
         wav = load_track(str(audio_path), model.audio_channels, model.samplerate)
 
+        total_samples = wav.shape[-1]
+        sample_rate = model.samplerate
+        total_seconds = total_samples / sample_rate if sample_rate else 0
+
+        if start_seconds is not None or end_seconds is not None:
+            start = 0.0 if start_seconds is None else float(start_seconds)
+            end = total_seconds if end_seconds is None else float(end_seconds)
+            start = max(0.0, start)
+            end = min(max(start, end), total_seconds)
+            start_idx = int(start * sample_rate)
+            end_idx = int(end * sample_rate)
+            if end_idx <= start_idx:
+                raise ValueError("Invalid split range: start must be before end.")
+            wav = wav[:, start_idx:end_idx]
+
         # Apply the model
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
-        sources = apply_model(
-            model,
-            wav[None],
-            device='cpu',
-            progress=False,
-        )[0]
+        apply_kwargs = {
+            "device": "cpu",
+            "progress": False,
+        }
+        if overlap is not None:
+            try:
+                overlap_value = float(overlap)
+            except (TypeError, ValueError):
+                overlap_value = None
+            if overlap_value is not None:
+                overlap_value = max(0.0, min(0.99, overlap_value))
+                apply_kwargs["overlap"] = overlap_value
+        if shifts is not None:
+            try:
+                shifts_value = int(shifts)
+            except (TypeError, ValueError):
+                shifts_value = None
+            if shifts_value is not None:
+                shifts_value = max(0, min(20, shifts_value))
+                apply_kwargs["shifts"] = shifts_value
+
+        allowed_args = set(inspect.signature(apply_model).parameters)
+        apply_kwargs = {k: v for k, v in apply_kwargs.items() if k in allowed_args}
+        sources = apply_model(model, wav[None], **apply_kwargs)[0]
 
         # Get the sample rate from the model
         sample_rate = model.samplerate
@@ -269,7 +341,15 @@ def _run_split_job(
         _set_job_state(job_id, status="error", error=str(exc))
 
 
-def _submit_split_job(audio_id: str, stems: List[str], model_alias: str) -> str:
+def _submit_split_job(
+    audio_id: str,
+    stems: List[str],
+    model_alias: str,
+    start_seconds: Optional[float],
+    end_seconds: Optional[float],
+    overlap: Optional[float],
+    shifts: Optional[int],
+) -> str:
     requested_stems = _normalize_stems(stems)
     if not requested_stems:
         raise ValueError("No valid stems selected for splitting.")
@@ -286,6 +366,10 @@ def _submit_split_job(audio_id: str, stems: List[str], model_alias: str) -> str:
             "requested_stems": requested_stems,
             "model": model_alias,
             "model_key": model_key,
+            "start_seconds": start_seconds,
+            "end_seconds": end_seconds,
+            "overlap": overlap,
+            "shifts": shifts,
         }
 
     split_executor.submit(
@@ -295,6 +379,10 @@ def _submit_split_job(audio_id: str, stems: List[str], model_alias: str) -> str:
         requested_stems,
         model_alias,
         model_key,
+        start_seconds,
+        end_seconds,
+        overlap,
+        shifts,
     )
     return job_id
 
@@ -339,7 +427,15 @@ def stream_audio(audio_id: str):
 @app.post("/api/split-audio")
 def split_audio(req: SplitAudioReq):
     try:
-        job_id = _submit_split_job(req.audioId, req.stems, req.model or "ht-demucs-v4")
+        job_id = _submit_split_job(
+            req.audioId,
+            req.stems,
+            req.model or "ht-demucs-v4",
+            req.startSeconds,
+            req.endSeconds,
+            req.overlap,
+            req.shifts,
+        )
         return {"jobId": job_id, "status": "queued"}
     except FileNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
@@ -360,6 +456,8 @@ def split_audio_status(job_id: str):
         "status": job.get("status", "unknown"),
         "audioId": job.get("audio_id"),
         "model": job.get("model"),
+        "startSeconds": job.get("start_seconds"),
+        "endSeconds": job.get("end_seconds"),
     }
 
     status = response["status"]

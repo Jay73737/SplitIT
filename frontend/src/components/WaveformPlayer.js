@@ -1,45 +1,72 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import WavesurferPlayer from "@wavesurfer/react";
 
-export default function WaveformPlayer({ url, height = 96, onWaveformReady, onPlayStateChange }) {
-  const [ws, setWs] = useState(null);
-  const [ready, setReady] = useState(false);
+function WaveformPlayer({
+  url,
+  height = 96,
+  onWaveformReady,
+  onPlayStateChange,
+  className = "",
+  interact = true,
+  waveColor = "#ff2db2",
+  progressColor = "#ff2db2",
+  barWidth = 4,
+  barGap = 2,
+  barRadius = 6,
+  barHeight = 1,
+  normalize = false,
+  cursorWidth = 0,
+}) {
   const [isPlaying, setIsPlaying] = useState(false);
   useEffect(() => {
-    setReady(false);
     setIsPlaying(false);
   }, [url]);
 
   return (
-    <div className={`w-full ${isPlaying ? 'waveform-playing' : ''}`} style={{ position: 'relative' }}>
+    <div
+      className={`waveform-player${isPlaying ? " playing" : ""}${
+        className ? ` ${className}` : ""
+      }`}
+      style={{
+        position: "relative",
+        width: "100%",
+        alignSelf: "stretch",
+        display: "flex",
+        alignItems: "center",
+        height,
+        minHeight: height,
+        flex: 1,
+      }}
+    >
       <WavesurferPlayer
         url={url ?? undefined}
-        height={120}
-        barWidth={3}
-        barGap={1}
-        barRadius={2}
-        cursorWidth={2}
-        normalize={false}
-        interact={true}
+        height={height}
+        barWidth={barWidth}
+        barGap={barGap}
+        barRadius={barRadius}
+        barHeight={barHeight}
+        cursorWidth={cursorWidth}
+        normalize={normalize}
+        interact={interact}
         autoCenter={false}
         autoScroll={false}
         hideScrollbar={true}
-        waveColor="rgba(59, 130, 246, 0.4)"
-        progressColor="rgba(236, 72, 153, 0.8)"
+        waveColor={waveColor}
+        progressColor={progressColor}
         onReady={(instance) => {
-          setWs(instance);
-          setReady(true);
-          // Zoom out to show full audio track
-          instance.zoom(0.5);
-          onWaveformReady?.(instance);
+          if (onWaveformReady) onWaveformReady(instance);
         }}
         onPlay={() => {
           setIsPlaying(true);
-          onPlayStateChange?.(true);
+          if (onPlayStateChange) onPlayStateChange(true);
         }}
         onPause={() => {
           setIsPlaying(false);
-          onPlayStateChange?.(false);
+          if (onPlayStateChange) onPlayStateChange(false);
+        }}
+        onFinish={() => {
+          setIsPlaying(false);
+          if (onPlayStateChange) onPlayStateChange(false);
         }}
         onError={(e) => console.error("WaveSurfer error:", e)}
       />
@@ -47,3 +74,5 @@ export default function WaveformPlayer({ url, height = 96, onWaveformReady, onPl
     </div>
   );
 }
+
+export default memo(WaveformPlayer);

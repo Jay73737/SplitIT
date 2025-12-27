@@ -20,6 +20,7 @@ export default function App() {
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [introActive, setIntroActive] = useState(true);
   const { selected: backendSelected, setSelected: setBackendSelected } = useSelection();
 
   useEffect(() => {
@@ -28,6 +29,11 @@ export default function App() {
       3000
     );
     return () => clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIntroActive(false), 5000);
+    return () => clearTimeout(timer);
   }, []);
 
   // Receive Enter from OS pill -> run the search
@@ -49,6 +55,14 @@ export default function App() {
       window.electronAPI?.resultsClosed?.();
     }
   }, [loading, results.length, selected, backendSelected]);
+
+  useEffect(() => {
+    if (!document?.documentElement) return;
+    document.documentElement.classList.toggle(
+      "dashboard-active",
+      Boolean(selected || backendSelected)
+    );
+  }, [selected, backendSelected]);
 
   const handleAudioDrop = (audioFile) => {
     // Create a mock video object for the dashboard view
@@ -146,7 +160,12 @@ export default function App() {
       ) : (
         <>
           {/* DOM pill stays for geometry only; hidden in Electron via CSS */}
-          <SearchBar onSearch={handleSearch} onAudioDrop={handleAudioDrop} loading={loading}>
+          <SearchBar
+            onSearch={handleSearch}
+            onAudioDrop={handleAudioDrop}
+            loading={loading}
+            introActive={introActive}
+          >
             <span key={msgIdx} className="pill-text">
               {messages[msgIdx]}
             </span>

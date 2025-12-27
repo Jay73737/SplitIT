@@ -174,18 +174,14 @@ This distribution includes:
 
 ## 🔧 Advanced Usage
 
-### Build Windows/Linux Executables
+### Backend Binary (PyInstaller)
 
 ```bash
-# Install build dependencies
+# Install build dependencies (first run)
 pip install pyinstaller
 
-# Build backend executable
-pyinstaller --onefile main.py --name SplitMe-Backend
-
-# Build frontend (in frontend directory)
-npm run dist-win  # for Windows
-npm run dist-linux  # for Linux
+# Build the backend bundle (outputs to dist/backend/)
+python scripts/build_backend.py --clean
 ```
 
 ### API-Only Mode
@@ -197,6 +193,39 @@ python main.py
 # Or directly:
 python -m uvicorn api.server:app --host 0.0.0.0 --port 8000
 ```
+
+### 📦 Packaging Desktop Releases
+
+We now ship a scripted workflow to produce installers with the bundled Python backend and Electron UI.
+
+1. **Install build tooling** (once per machine):
+   ```bash
+   pip install pyinstaller
+   npm install --prefix frontend
+   ```
+
+2. **Build everything in one go** from the project root:
+   ```bash
+   python scripts/package_app.py --platform mac
+   # use --platform win or linux when building on those OSes
+   ```
+
+   The script will:
+   - package the FastAPI backend with PyInstaller into `dist/backend/SplitMeBackend`
+   - run `npm run dist(:platform)` to create installers with Electron Builder
+   - write distributables to `release/`
+
+3. **Backend only** (optional):
+   ```bash
+   python scripts/build_backend.py --clean
+   ```
+
+4. **Frontend only** (optional):
+   ```bash
+   npm run dist:mac   # or dist:win / dist:linux
+   ```
+
+> ℹ️  Build artifacts live in `dist/backend/` and the Electron outputs land in `release/`. These folders are ignored in git by default.
 
 ## 🎉 Ready to Split Some Stems?
 

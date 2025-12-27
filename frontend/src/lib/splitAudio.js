@@ -17,11 +17,28 @@ async function parseError(response, fallback) {
   return fallback;
 }
 
-export async function startStemSplit({ audioId, stems, model, signal }) {
+export async function startStemSplit({
+  audioId,
+  stems,
+  model,
+  startSeconds,
+  endSeconds,
+  overlap,
+  shifts,
+  signal,
+}) {
   const res = await fetch(`${API_BASE}/api/split-audio`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ audioId, stems, model }),
+    body: JSON.stringify({
+      audioId,
+      stems,
+      model,
+      startSeconds,
+      endSeconds,
+      overlap,
+      shifts,
+    }),
     signal,
   });
 

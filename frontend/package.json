@@ -24,8 +24,12 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "electron": "electron .",
-    "electron-dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && cross-env ELECTRON_START_URL=http://localhost:3000 electron .\""
+    "electron": "env -u ELECTRON_RUN_AS_NODE electron .",
+    "electron-dev": "concurrently \"npm start\" \"wait-on http://localhost:3000 && env -u ELECTRON_RUN_AS_NODE ELECTRON_START_URL=http://localhost:3000 electron .\"",
+    "dist": "npm run build && electron-builder",
+    "dist:mac": "npm run build && electron-builder --mac",
+    "dist:win": "npm run build && electron-builder --win",
+    "dist:linux": "npm run build && electron-builder --linux"
   },
   "eslintConfig": {
     "extends": [
@@ -49,6 +53,56 @@
     "concurrently": "^9.2.0",
     "cross-env": "^10.0.0",
     "electron": "^37.2.5",
+    "electron-builder": "^24.13.3",
     "wait-on": "^8.0.4"
+  },
+  "build": {
+    "appId": "com.splitme.desktop",
+    "productName": "SplitMe",
+    "directories": {
+      "buildResources": "buildResources",
+      "output": "../release"
+    },
+    "files": [
+      "build/**/*",
+      "electron.js",
+      "preload.js",
+      "pill-preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../dist/backend/SplitMeBackend",
+        "to": "backend"
+      }
+    ],
+    "mac": {
+      "category": "public.app-category.music",
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "buildResources/icon.png"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        "zip"
+      ],
+      "icon": "buildResources/icon.png"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "tar.gz"
+      ],
+      "category": "AudioVideo",
+      "icon": "buildResources/icon.png"
+    }
   }
 }

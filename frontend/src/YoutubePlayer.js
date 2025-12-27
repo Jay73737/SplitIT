@@ -25,7 +25,22 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
   const hostRef = useRef(null);
   const playerRef = useRef(null);
   const tickerRef = useRef(null);
+  const onTimeRef = useRef(onTime);
+  const onStateChangeRef = useRef(onStateChange);
+  const onReadyRef = useRef(onReady);
   const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    onTimeRef.current = onTime;
+  }, [onTime]);
+
+  useEffect(() => {
+    onStateChangeRef.current = onStateChange;
+  }, [onStateChange]);
+
+  useEffect(() => {
+    onReadyRef.current = onReady;
+  }, [onReady]);
 
   useEffect(() => {
     let disposed = false;
@@ -47,12 +62,12 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
             setReady(true);
             e.target.setVolume(volume);
             e.target.setPlaybackRate(playbackRate);
-            onReady?.(e, {
+            onReadyRef.current?.(e, {
               duration: e.target.getDuration?.() || 0,
             });
             startTicker();
           },
-          onStateChange: (e) => onStateChange?.(e),
+          onStateChange: (e) => onStateChangeRef.current?.(e),
         },
       });
     });
@@ -64,7 +79,7 @@ const YouTubePlayer = forwardRef(function YouTubePlayer(
         if (!p) return;
         const t = p.getCurrentTime?.() || 0;
         const d = p.getDuration?.() || 0;
-        onTime?.(t, d);
+        onTimeRef.current?.(t, d);
       }, 120);
     }
     function stopTicker() {

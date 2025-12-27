@@ -56,7 +56,7 @@ const CustomDropdown = ({
 
   return (
     <div
-      className={`dash-select-wrapper ${className} ${
+      className={`dash-select-wrapper ${className} ${isOpen ? "open" : ""} ${
         isOpen && pushContent ? "dropdown-open" : ""
       }`}
       ref={dropdownRef}
