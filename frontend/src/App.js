@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import WindowWrapper from "./WindowWrapper";
 import SearchBar from "./SearchBar";
@@ -21,6 +21,15 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [introActive, setIntroActive] = useState(true);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const dragStateRef = useRef({
+    active: false,
+    dragging: false,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0,
+  });
   const { selected: backendSelected, setSelected: setBackendSelected } = useSelection();
 
   useEffect(() => {
@@ -80,6 +89,50 @@ export default function App() {
     setSelected(mockVideo);
     setResults([]);
     setError(null);
+  };
+
+  const handlePillDragStart = (event) => {
+    if (event.button !== 0) return;
+    dragStateRef.current = {
+      active: true,
+      dragging: false,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: dragOffset.x,
+      originY: dragOffset.y,
+    };
+
+    const handlePointerMove = (moveEvent) => {
+      if (!dragStateRef.current.active) return;
+      const dx = moveEvent.clientX - dragStateRef.current.startX;
+      const dy = moveEvent.clientY - dragStateRef.current.startY;
+      if (!dragStateRef.current.dragging) {
+        if (Math.hypot(dx, dy) < 4) return;
+        dragStateRef.current.dragging = true;
+        document.body.style.userSelect = "none";
+      }
+      setDragOffset({
+        x: dragStateRef.current.originX + dx,
+        y: dragStateRef.current.originY + dy,
+      });
+    };
+
+    const handlePointerUp = () => {
+      dragStateRef.current.active = false;
+      dragStateRef.current.dragging = false;
+      document.body.style.userSelect = "";
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+      window.removeEventListener("pointercancel", handlePointerUp);
+    };
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+    window.addEventListener("pointercancel", handlePointerUp);
+  };
+
+  const resultsDragStyle = {
+    transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
   };
 
   const handleSearch = async (term) => {
@@ -165,6 +218,8 @@ export default function App() {
             onAudioDrop={handleAudioDrop}
             loading={loading}
             introActive={introActive}
+            dragOffset={dragOffset}
+            onDragStart={handlePillDragStart}
           >
             <span key={msgIdx} className="pill-text">
               {messages[msgIdx]}
@@ -173,28 +228,30 @@ export default function App() {
 
           {error && <div className="error-banner">{error}</div>}
 
-          <AnimatePresence initial={false} mode="popLayout">
-            {loading && results.length === 0 && (
-              <motion.div
-                key="loading-panel"
-                className="results-window"
-                initial={{ opacity: 0, y: 8 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.18 }}
-              >
-                <div className="loading-center">Searching…</div>
-              </motion.div>
-            )}
+          <div className="results-drag-shell" style={resultsDragStyle}>
+            <AnimatePresence initial={false} mode="popLayout">
+              {loading && results.length === 0 && (
+                <motion.div
+                  key="loading-panel"
+                  className="results-window"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <div className="loading-center">Searching…</div>
+                </motion.div>
+              )}
 
-            {!loading && results.length > 0 && (
-              <ResultsWindow
-                key="results"
-                results={results}
-                onSelect={setSelected}
-              />
-            )}
-          </AnimatePresence>
+              {!loading && results.length > 0 && (
+                <ResultsWindow
+                  key="results"
+                  results={results}
+                  onSelect={setSelected}
+                />
+              )}
+            </AnimatePresence>
+          </div>
         </>
       )}
     </WindowWrapper>

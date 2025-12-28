@@ -1,11 +1,19 @@
 import { useEffect, useRef, useState } from "react";
 import "./App.css";
 
-function SearchBar({ onSearch, onAudioDrop, loading, children, introActive }) {
+function SearchBar({
+  onSearch,
+  onAudioDrop,
+  loading,
+  children,
+  introActive,
+  dragOffset,
+  onDragStart,
+}) {
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
   const [dragOver, setDragOver] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [internalDragOffset, setInternalDragOffset] = useState({ x: 0, y: 0 });
   const introCanvasRef = useRef(null);
   const pillRef = useRef(null);
   const dragStateRef = useRef({
@@ -62,8 +70,9 @@ function SearchBar({ onSearch, onAudioDrop, loading, children, introActive }) {
   };
 
   const showPlaceholder = !introActive && !value && !focused;
+  const resolvedDragOffset = dragOffset || internalDragOffset;
   const dragStyle = {
-    transform: `translate3d(${dragOffset.x}px, ${dragOffset.y}px, 0)`,
+    transform: `translate3d(${resolvedDragOffset.x}px, ${resolvedDragOffset.y}px, 0)`,
   };
 
   useEffect(() => {
@@ -184,8 +193,8 @@ function SearchBar({ onSearch, onAudioDrop, loading, children, introActive }) {
       dragging: false,
       startX: event.clientX,
       startY: event.clientY,
-      originX: dragOffset.x,
-      originY: dragOffset.y,
+      originX: internalDragOffset.x,
+      originY: internalDragOffset.y,
     };
 
     const handlePointerMove = (moveEvent) => {
@@ -197,7 +206,7 @@ function SearchBar({ onSearch, onAudioDrop, loading, children, introActive }) {
         dragStateRef.current.dragging = true;
         document.body.style.userSelect = "none";
       }
-      setDragOffset({
+      setInternalDragOffset({
         x: dragStateRef.current.originX + dx,
         y: dragStateRef.current.originY + dy,
       });
@@ -217,6 +226,8 @@ function SearchBar({ onSearch, onAudioDrop, loading, children, introActive }) {
     window.addEventListener("pointercancel", handlePointerUp);
   };
 
+  const pointerDownHandler = onDragStart || handlePointerDown;
+
   return (
     <div className="pill-wrapper">
       <div className="pill-drag-shell" style={dragStyle}>
@@ -225,7 +236,7 @@ function SearchBar({ onSearch, onAudioDrop, loading, children, introActive }) {
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={handleDrop}
-          onPointerDown={handlePointerDown}
+          onPointerDown={pointerDownHandler}
           style={{ WebkitAppRegion: "drag" }}
           ref={pillRef}
         >

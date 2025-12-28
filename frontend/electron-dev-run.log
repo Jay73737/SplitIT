@@ -1703,3 +1703,5 @@
 [0]   Line 1033:9:  The 'formatTimeForFile' function makes the dependencies of useCallback Hook (at line 1156) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'formatTimeForFile' in its own useCallback() Hook                                                                            react-hooks/exhaustive-deps
 [0] 
 [0] webpack compiled with 1 warning
+[1] wait-on http://localhost:3000 && env -u ELECTRON_RUN_AS_NODE ELECTRON_START_URL=http://localhost:3000 electron . exited with code 0
+[0] npm start exited with code 1

@@ -9,7 +9,7 @@ import { startStemSplit, fetchStemSplitStatus } from "./lib/splitAudio";
 import { audioAnalyzer } from "./audioAnalysis";
 import "./App.css";
 
-const DEFAULT_VOLUME = 1;
+const DEFAULT_VOLUME = 20;
 const DEFAULT_REACTIVITY = 1;
 const DEFAULT_GRADIENT_TUNING = {
   targetPerSecond: 55,
