@@ -719,13 +719,22 @@ export default function DashboardView({ video, onBack }) {
       setPlaying(false);
       pauseUnderlying();
       buildGradientPeaks(instance);
+      const nextDuration = instance?.getDuration?.() || 0;
+      if (nextDuration) {
+        setDuration(nextDuration);
+        if (!selectionInitializedRef.current) {
+          setSelectionRange(0, nextDuration);
+          selectionInitializedRef.current = true;
+          setHighlightActive(false);
+        }
+      }
       const targetZoom = waveformZoomed ? WAVEFORM_ZOOM_IN : WAVEFORM_ZOOM_DEFAULT;
       waveformZoomRef.current = targetZoom;
       if (instance?.zoom) {
         instance.zoom(targetZoom);
       }
     },
-    [buildGradientPeaks, pauseUnderlying, waveformZoomed]
+    [buildGradientPeaks, pauseUnderlying, setSelectionRange, waveformZoomed]
   );
 
   const handleMutedWaveformReady = useCallback(
@@ -1103,63 +1112,109 @@ export default function DashboardView({ video, onBack }) {
     return decoded;
   }, [audioBlob]);
 
-  const buildSelectionWav = useCallback(
+  useEffect(() => {
+    if (!audioBlob || !electronAPI) return;
+    let cancelled = false;
+    ensureDecodedAudio().catch((err) => {
+      if (!cancelled) {
+        console.warn("Failed to pre-decode audio for clip export:", err);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [audioBlob, electronAPI, ensureDecodedAudio]);
+
+  const buildClipBuffer = useCallback((decoded, startSeconds, endSeconds) => {
+    if (!decoded) return null;
+    const sampleRate = decoded.sampleRate;
+    const startSample = Math.max(0, Math.floor(startSeconds * sampleRate));
+    const endSample = Math.min(decoded.length, Math.ceil(endSeconds * sampleRate));
+    const frameCount = Math.max(0, endSample - startSample);
+    if (!frameCount) return null;
+    let context = audioContextRef.current;
+    if (!context) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      context = new AudioContextClass();
+      audioContextRef.current = context;
+    }
+    const clipBuffer = context.createBuffer(
+      decoded.numberOfChannels,
+      frameCount,
+      sampleRate
+    );
+    for (let channel = 0; channel < decoded.numberOfChannels; channel += 1) {
+      const channelData = decoded.getChannelData(channel).slice(startSample, endSample);
+      clipBuffer.getChannelData(channel).set(channelData);
+    }
+    return clipBuffer;
+  }, []);
+
+  const buildSelectionWavBuffer = useCallback(
     async (startSeconds, endSeconds) => {
       const decoded = await ensureDecodedAudio();
-      if (!decoded) return null;
-      const sampleRate = decoded.sampleRate;
-      const startSample = Math.max(0, Math.floor(startSeconds * sampleRate));
-      const endSample = Math.min(decoded.length, Math.ceil(endSeconds * sampleRate));
-      const frameCount = Math.max(0, endSample - startSample);
-      if (!frameCount) return null;
-      const context = audioContextRef.current;
-      const clipBuffer = context.createBuffer(
-        decoded.numberOfChannels,
-        frameCount,
-        sampleRate
-      );
-      for (let channel = 0; channel < decoded.numberOfChannels; channel += 1) {
-        const channelData = decoded.getChannelData(channel).slice(startSample, endSample);
-        clipBuffer.getChannelData(channel).set(channelData);
-      }
-      return audioAnalyzer.audioBufferToWav(clipBuffer);
+      const clipBuffer = buildClipBuffer(decoded, startSeconds, endSeconds);
+      if (!clipBuffer) return null;
+      return audioAnalyzer.audioBufferToWavArrayBuffer(clipBuffer);
     },
-    [ensureDecodedAudio]
+    [buildClipBuffer, ensureDecodedAudio]
+  );
+
+  const buildSelectionWavBufferSync = useCallback(
+    (startSeconds, endSeconds) => {
+      const decoded = decodedAudioRef.current;
+      const clipBuffer = buildClipBuffer(decoded, startSeconds, endSeconds);
+      if (!clipBuffer) return null;
+      return audioAnalyzer.audioBufferToWavArrayBuffer(clipBuffer);
+    },
+    [buildClipBuffer]
   );
 
   const handleSelectionDragStart = useCallback(
-    async (event) => {
+    (event) => {
       if (!electronAPI) return;
-      const rangeStart = Math.min(highlightStart, highlightEnd);
-      const rangeEnd = Math.max(highlightStart, highlightEnd);
+      const { start, end } = highlightRef.current;
+      const rangeStart = Math.min(start, end);
+      const rangeEnd = Math.max(start, end);
       if (!audioBlob || rangeEnd <= rangeStart) return;
-      event.dataTransfer.effectAllowed = "copy";
-      event.dataTransfer.setData("text/plain", "SplitMe waveform clip");
-      try {
-        const wavBlob = await buildSelectionWav(rangeStart, rangeEnd);
-        if (!wavBlob) return;
-        const buffer = await wavBlob.arrayBuffer();
-        const baseTitle = video?.title || video?.id || "SplitMe Clip";
-        const fileName = `${baseTitle} ${formatTimeForFile(rangeStart)}-${formatTimeForFile(
-          rangeEnd
-        )}.wav`;
-        const displayName = `Clip ${formatTime(rangeStart)}-${formatTime(rangeEnd)}`;
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "copy";
+        event.dataTransfer.setData("text/plain", "SplitMe waveform clip");
+      }
+      const baseTitle = video?.title || video?.id || "SplitMe Clip";
+      const fileName = `${baseTitle} ${formatTimeForFile(rangeStart)}-${formatTimeForFile(
+        rangeEnd
+      )}.wav`;
+      const displayName = `Clip ${formatTime(rangeStart)}-${formatTime(rangeEnd)}`;
+      const syncBuffer = buildSelectionWavBufferSync(rangeStart, rangeEnd);
+      if (syncBuffer) {
         electronAPI.dragWaveformClip({
-          data: buffer,
+          data: syncBuffer,
           fileName,
           displayName,
         });
-      } catch (err) {
-        console.error("Failed to export selection:", err);
+        return;
       }
+      (async () => {
+        try {
+          const buffer = await buildSelectionWavBuffer(rangeStart, rangeEnd);
+          if (!buffer) return;
+          electronAPI.dragWaveformClip({
+            data: buffer,
+            fileName,
+            displayName,
+          });
+        } catch (err) {
+          console.error("Failed to export selection:", err);
+        }
+      })();
     },
     [
       audioBlob,
-      buildSelectionWav,
+      buildSelectionWavBuffer,
+      buildSelectionWavBufferSync,
       electronAPI,
       formatTimeForFile,
-      highlightEnd,
-      highlightStart,
       video?.id,
       video?.title,
     ]
@@ -1688,20 +1743,6 @@ export default function DashboardView({ video, onBack }) {
               </div>
             )}
 
-            {!audioLoading && !showStemStack && splitStatus !== "processing" && !splitError && !audioError && !backendAudioUrl && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                  color: "#ff6b6b",
-                  fontSize: "10px",
-                }}
-              >
-                Failed to load waveform. Please try again.
-              </div>
-            )}
           </div>
 
           {!showStemStack && (

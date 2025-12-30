@@ -68,7 +68,7 @@ body {
   height: 140px;
   border-radius: 999px;
   transition: none;
-  animation: pillIntroMorph 1s cubic-bezier(0.16, 1, 0.3, 1) 5s forwards;
+  animation: pillIntroMorph 1.9s cubic-bezier(0.22, 1.15, 0.36, 1) 5s forwards;
 }
 
 .pill-window.intro .pill-input,
@@ -266,6 +266,18 @@ body {
     height: 140px;
     border-radius: 999px;
     transform: scale(1);
+  }
+  65% {
+    width: 840px;
+    height: 72px;
+    border-radius: 44px;
+    transform: scale(1.02);
+  }
+  82% {
+    width: 790px;
+    height: 62px;
+    border-radius: 36px;
+    transform: scale(0.995);
   }
   100% {
     width: 800px;
@@ -2037,14 +2049,14 @@ body {
 /* Make the React page transparent in Electron */
 .is-electron, .is-electron body, .is-electron #root, .is-electron .App { background: transparent !important; }
 
-/* Hide the DOM pill and its input only while the dashboard is active in Electron */
-.is-electron.dashboard-active .pill-window,
-.is-electron.dashboard-active .pill-window::before {
+/* In Electron, keep the DOM pill for geometry only and hide its visuals/inputs. */
+.is-electron .pill-window,
+.is-electron .pill-window::before {
   opacity: 0 !important;
   pointer-events: none !important;
 }
 
-.is-electron.dashboard-active .pill-input { opacity: 0 !important; }
+.is-electron .pill-input { opacity: 0 !important; }
 
 .ghost { top: 50%; transform: translateY(-50%); }
 .results-window { z-index: 3; }

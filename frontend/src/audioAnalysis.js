@@ -341,8 +341,8 @@ export class AudioAnalyzer {
     return { d, W: width, H: height, mid };
   }
 
-  // Convert AudioBuffer to WAV blob for WaveSurfer
-  audioBufferToWav(buffer) {
+  // Convert AudioBuffer to WAV ArrayBuffer for export or blob creation.
+  audioBufferToWavArrayBuffer(buffer) {
     const length = buffer.length;
     const numberOfChannels = buffer.numberOfChannels;
     const sampleRate = buffer.sampleRate;
@@ -379,6 +379,12 @@ export class AudioAnalyzer {
       }
     }
     
+    return arrayBuffer;
+  }
+
+  // Convert AudioBuffer to WAV blob for WaveSurfer
+  audioBufferToWav(buffer) {
+    const arrayBuffer = this.audioBufferToWavArrayBuffer(buffer);
     return new Blob([arrayBuffer], { type: 'audio/wav' });
   }
 }
