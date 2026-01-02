@@ -27,6 +27,37 @@ function sanitizeFileName(name, fallback = "SplitMe Stems") {
   return safe.length ? safe : fallback;
 }
 
+function getAppDragIcon() {
+  try {
+    const iconPath = path.join(app.getAppPath(), "buildResources", "icon.png");
+    if (fs.existsSync(iconPath)) {
+      const icon = nativeImage.createFromPath(iconPath);
+      if (!icon.isEmpty()) return icon;
+    }
+  } catch (error) {
+    logMain("drag-icon-error", { message: error.message });
+  }
+  return nativeImage.createEmpty();
+}
+
+function getWaveformDragIcon() {
+  const candidates = [
+    path.join(app.getAppPath(), "buildResources", "drag-icon.png"),
+    path.join(app.getAppPath(), "build", "logo192.png"),
+    path.join(app.getAppPath(), "public", "logo192.png"),
+  ];
+  for (const iconPath of candidates) {
+    try {
+      if (!fs.existsSync(iconPath)) continue;
+      const icon = nativeImage.createFromPath(iconPath);
+      if (!icon.isEmpty()) return icon;
+    } catch (error) {
+      logMain("drag-icon-error", { message: error.message });
+    }
+  }
+  return getAppDragIcon();
+}
+
 const isMac = process.platform === "darwin";
 const isWin = process.platform === "win32";
 const isDev = !app.isPackaged;
@@ -35,6 +66,7 @@ let mainWin = null;
 let pillWin = null;
 let backendProcess = null;
 let pillDragState = null;
+let waveformDragTimer = null;
 
 const BACKEND_HOST = process.env.SPLITME_BACKEND_HOST || "127.0.0.1";
 const BACKEND_PORT = parseInt(process.env.SPLITME_BACKEND_PORT || "5050", 10);
@@ -738,7 +770,7 @@ ipcMain.on("stems:drag-file", (event, payload = {}) => {
       throw new Error("Stem file does not exist");
     }
 
-    const icon = nativeImage.createEmpty();
+    const icon = getAppDragIcon();
     event.sender.startDrag({
       file: resolved,
       icon,
@@ -747,6 +779,19 @@ ipcMain.on("stems:drag-file", (event, payload = {}) => {
     logMain("stems-drag", { path: resolved });
   } catch (error) {
     logMain("stems-drag-error", { message: error.message });
+  }
+});
+
+ipcMain.on("waveform:drag-end", () => {
+  if (!mainWin || mainWin.isDestroyed()) return;
+  try {
+    if (waveformDragTimer) {
+      clearTimeout(waveformDragTimer);
+      waveformDragTimer = null;
+    }
+    mainWin.setIgnoreMouseEvents(false);
+  } catch (error) {
+    logMain("waveform-drag-ignore-error", { message: error.message });
   }
 });
 
@@ -777,7 +822,26 @@ ipcMain.on("waveform:drag-clip", (event, payload = {}) => {
     const buffer = Buffer.isBuffer(data) ? data : Buffer.from(data);
     fs.writeFileSync(resolved, buffer);
 
-    const icon = nativeImage.createEmpty();
+    if (mainWin && !mainWin.isDestroyed()) {
+      try {
+        mainWin.setIgnoreMouseEvents(true, { forward: true });
+        if (waveformDragTimer) clearTimeout(waveformDragTimer);
+        waveformDragTimer = setTimeout(() => {
+          try {
+            if (mainWin && !mainWin.isDestroyed()) {
+              mainWin.setIgnoreMouseEvents(false);
+            }
+          } catch (err) {
+            logMain("waveform-drag-ignore-error", { message: err.message });
+          }
+          waveformDragTimer = null;
+        }, 4000);
+      } catch (error) {
+        logMain("waveform-drag-ignore-error", { message: error.message });
+      }
+    }
+
+    const icon = getWaveformDragIcon();
     event.sender.startDrag({
       file: resolved,
       icon,

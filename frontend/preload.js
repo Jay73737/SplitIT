@@ -19,6 +19,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
   downloadStems: (payload) => ipcRenderer.invoke("stems:download-all", payload),
   dragStem: (payload) => ipcRenderer.send("stems:drag-file", payload),
   dragWaveformClip: (payload) => ipcRenderer.send("waveform:drag-clip", payload),
+  dragWaveformEnd: () => ipcRenderer.send("waveform:drag-end"),
   pickSaveFolder: () => ipcRenderer.invoke("settings:pick-folder"),
   getDefaultSaveFolder: () => ipcRenderer.invoke("settings:get-default-folder"),
 });

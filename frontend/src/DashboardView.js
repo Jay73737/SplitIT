@@ -38,8 +38,7 @@ export default function DashboardView({ video, onBack }) {
   const [playing, setPlaying] = useState(false);
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
-  const [loop, setLoop] = useState(null);
-  const [markers, setMarkers] = useState([]);
+  const [loop] = useState(null);
   const [audioFormat, setAudioFormat] = useState("");
   const [aiModel, setAiModel] = useState("");
   const [stems, setStems] = useState({
@@ -82,6 +81,7 @@ export default function DashboardView({ video, onBack }) {
   const [highlightStart, setHighlightStart] = useState(0);
   const [highlightEnd, setHighlightEnd] = useState(0);
   const [highlightActive, setHighlightActive] = useState(false);
+  const [clipReady, setClipReady] = useState(false);
   const [activeDrag, setActiveDrag] = useState(null);
   const audioContextRef = useRef(null);
   const decodedAudioRef = useRef(null);
@@ -94,7 +94,6 @@ export default function DashboardView({ video, onBack }) {
   const zoomAnimRef = useRef(null);
   const mutedWaveformRef = useRef(null);
   const [saveFolderPath, setSaveFolderPath] = useState("");
-  const [splitJobId, setSplitJobId] = useState(null);
   const [splitStatus, setSplitStatus] = useState("idle");
   const [splitError, setSplitError] = useState(null);
   const [splitResults, setSplitResults] = useState([]);
@@ -326,7 +325,7 @@ export default function DashboardView({ video, onBack }) {
     ctx.globalCompositeOperation = "destination-in";
     ctx.drawImage(mask, 0, 0, width, height);
     ctx.globalCompositeOperation = "source-over";
-  }, []);
+  }, [maxOffset, maxShift]);
 
   const scheduleGradientDraw = useCallback(() => {
     if (gradientDrawRef.current) return;
@@ -628,7 +627,6 @@ export default function DashboardView({ video, onBack }) {
       splitPollRef.current = null;
     }
 
-    setSplitJobId(null);
     setSplitStatus("idle");
     setSplitError(null);
     setSplitResults([]);
@@ -655,7 +653,6 @@ export default function DashboardView({ video, onBack }) {
     }
 
     if (!video?.id) {
-      if (backendAudioUrl) URL.revokeObjectURL(backendAudioUrl);
       setBackendAudioUrl(null);
       setAudioBlob(null);
       setAudioError(null);
@@ -686,7 +683,6 @@ export default function DashboardView({ video, onBack }) {
           "mp3",
           abortRef.current.signal
         );
-        if (backendAudioUrl) URL.revokeObjectURL(backendAudioUrl);
         setBackendAudioUrl(objectUrl);
         setAudioBlob(blob);
         setBackendAudioId(id);
@@ -695,7 +691,6 @@ export default function DashboardView({ video, onBack }) {
           return;
         }
         console.error("Failed to load backend audio:", err);
-        if (backendAudioUrl) URL.revokeObjectURL(backendAudioUrl);
         setBackendAudioUrl(null);
         setAudioError(err.message || "Failed to load waveform audio.");
         setBackendAudioId(null);
@@ -711,7 +706,13 @@ export default function DashboardView({ video, onBack }) {
     return () => {
       abortRef.current?.abort();
     };
-  }, [resetGradientState, video?.id, video?.isLocalFile]);
+  }, [
+    resetGradientState,
+    video?.file,
+    video?.filePath,
+    video?.id,
+    video?.isLocalFile,
+  ]);
 
   const handleWaveformReady = useCallback(
     (instance) => {
@@ -897,7 +898,6 @@ export default function DashboardView({ video, onBack }) {
       }
 
       const { jobId, status } = await startStemSplit(payload);
-      setSplitJobId(jobId);
       setSplitStatus(status || "processing");
       beginSplitPolling(jobId);
     } catch (err) {
@@ -1039,13 +1039,13 @@ export default function DashboardView({ video, onBack }) {
     setExpandedStems((prev) => !prev);
   }, []);
 
-  const formatTimeForFile = (seconds = 0) => {
+  const formatTimeForFile = useCallback((seconds = 0) => {
     const safeSeconds = Number.isFinite(seconds) ? Math.max(0, seconds) : 0;
     const total = Math.floor(safeSeconds);
     const mins = Math.floor(total / 60);
     const secs = total % 60;
     return `${mins}-${secs.toString().padStart(2, "0")}`;
-  };
+  }, []);
 
   const applyWaveformZoom = useCallback(
     (value) => {
@@ -1113,13 +1113,20 @@ export default function DashboardView({ video, onBack }) {
   }, [audioBlob]);
 
   useEffect(() => {
+    setClipReady(false);
     if (!audioBlob || !electronAPI) return;
     let cancelled = false;
-    ensureDecodedAudio().catch((err) => {
-      if (!cancelled) {
-        console.warn("Failed to pre-decode audio for clip export:", err);
-      }
-    });
+    ensureDecodedAudio()
+      .then((decoded) => {
+        if (!cancelled && decoded) {
+          setClipReady(true);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          console.warn("Failed to pre-decode audio for clip export:", err);
+        }
+      });
     return () => {
       cancelled = true;
     };
@@ -1150,16 +1157,6 @@ export default function DashboardView({ video, onBack }) {
     return clipBuffer;
   }, []);
 
-  const buildSelectionWavBuffer = useCallback(
-    async (startSeconds, endSeconds) => {
-      const decoded = await ensureDecodedAudio();
-      const clipBuffer = buildClipBuffer(decoded, startSeconds, endSeconds);
-      if (!clipBuffer) return null;
-      return audioAnalyzer.audioBufferToWavArrayBuffer(clipBuffer);
-    },
-    [buildClipBuffer, ensureDecodedAudio]
-  );
-
   const buildSelectionWavBufferSync = useCallback(
     (startSeconds, endSeconds) => {
       const decoded = decodedAudioRef.current;
@@ -1170,51 +1167,54 @@ export default function DashboardView({ video, onBack }) {
     [buildClipBuffer]
   );
 
+  const resolveExportRange = useCallback(() => {
+    const highlight = highlightRef.current;
+    const highlightStartValue = Math.min(highlight.start, highlight.end);
+    const highlightEndValue = Math.max(highlight.start, highlight.end);
+    const hasHighlight =
+      highlightActive && highlightEndValue > highlightStartValue;
+    if (hasHighlight) {
+      return { start: highlightStartValue, end: highlightEndValue };
+    }
+    const selection = selectionRef.current;
+    return {
+      start: Math.min(selection.start, selection.end),
+      end: Math.max(selection.start, selection.end),
+    };
+  }, [highlightActive]);
+
   const handleSelectionDragStart = useCallback(
     (event) => {
       if (!electronAPI) return;
-      const { start, end } = highlightRef.current;
-      const rangeStart = Math.min(start, end);
-      const rangeEnd = Math.max(start, end);
+      const { start: rangeStart, end: rangeEnd } = resolveExportRange();
       if (!audioBlob || rangeEnd <= rangeStart) return;
-      if (event.dataTransfer) {
-        event.dataTransfer.effectAllowed = "copy";
-        event.dataTransfer.setData("text/plain", "SplitMe waveform clip");
-      }
       const baseTitle = video?.title || video?.id || "SplitMe Clip";
       const fileName = `${baseTitle} ${formatTimeForFile(rangeStart)}-${formatTimeForFile(
         rangeEnd
       )}.wav`;
       const displayName = `Clip ${formatTime(rangeStart)}-${formatTime(rangeEnd)}`;
       const syncBuffer = buildSelectionWavBufferSync(rangeStart, rangeEnd);
-      if (syncBuffer) {
-        electronAPI.dragWaveformClip({
-          data: syncBuffer,
-          fileName,
-          displayName,
-        });
+      if (!syncBuffer) {
+        event.preventDefault();
         return;
       }
-      (async () => {
-        try {
-          const buffer = await buildSelectionWavBuffer(rangeStart, rangeEnd);
-          if (!buffer) return;
-          electronAPI.dragWaveformClip({
-            data: buffer,
-            fileName,
-            displayName,
-          });
-        } catch (err) {
-          console.error("Failed to export selection:", err);
-        }
-      })();
+      event.preventDefault();
+      event.stopPropagation();
+      if (event.dataTransfer) {
+        event.dataTransfer.effectAllowed = "copy";
+      }
+      electronAPI.dragWaveformClip({
+        data: syncBuffer,
+        fileName,
+        displayName,
+      });
     },
     [
       audioBlob,
-      buildSelectionWavBuffer,
       buildSelectionWavBufferSync,
       electronAPI,
       formatTimeForFile,
+      resolveExportRange,
       video?.id,
       video?.title,
     ]
@@ -1284,17 +1284,26 @@ export default function DashboardView({ video, onBack }) {
     : 0;
   const highlightNormalizedStart = Math.min(highlightStart, highlightEnd);
   const highlightNormalizedEnd = Math.max(highlightStart, highlightEnd);
-  const highlightStartPct = duration
-    ? Math.min(1, Math.max(0, highlightNormalizedStart / duration))
+  const useHighlightForExport =
+    activeDrag === "selection" ||
+    (highlightActive && highlightNormalizedEnd > highlightNormalizedStart);
+  const exportNormalizedStart = useHighlightForExport
+    ? highlightNormalizedStart
+    : normalizedStart;
+  const exportNormalizedEnd = useHighlightForExport
+    ? highlightNormalizedEnd
+    : normalizedEnd;
+  const exportStartPct = duration
+    ? Math.min(1, Math.max(0, exportNormalizedStart / duration))
     : 0;
-  const highlightEndPct = duration
-    ? Math.min(1, Math.max(0, highlightNormalizedEnd / duration))
+  const exportEndPct = duration
+    ? Math.min(1, Math.max(0, exportNormalizedEnd / duration))
     : 0;
-  const highlightWidthPct = Math.max(0, highlightEndPct - highlightStartPct);
+  const exportWidthPct = Math.max(0, exportEndPct - exportStartPct);
   const showSelectionOverlay =
-    highlightWidthPct > 0 &&
-    highlightWidthPct < 0.999 &&
-    (highlightActive || activeDrag === "selection");
+    exportWidthPct > 0 &&
+    exportWidthPct < 0.999 &&
+    (useHighlightForExport || selectionEnd > selectionStart);
   const activeClip = showTimeline
     ? `inset(0 ${(1 - selectionEndPct) * 100}% 0 ${selectionStartPct * 100}%)`
     : "inset(0 0 0 0)";
@@ -1649,13 +1658,20 @@ export default function DashboardView({ video, onBack }) {
                     <div
                       className="waveform-selection"
                       style={{
-                        left: `${highlightStartPct * 100}%`,
-                        width: `${highlightWidthPct * 100}%`,
+                        left: `${exportStartPct * 100}%`,
+                        width: `${exportWidthPct * 100}%`,
                       }}
-                      draggable={Boolean(electronAPI)}
+                      draggable={Boolean(electronAPI && clipReady)}
                       onPointerDown={(event) => event.stopPropagation()}
                       onDragStart={handleSelectionDragStart}
-                      title="Drag to export WAV clip"
+                      onDragEnd={() => electronAPI?.dragWaveformEnd?.()}
+                      title={
+                        electronAPI
+                          ? clipReady
+                            ? "Drag to export WAV clip"
+                            : "Preparing clip export..."
+                          : "Clip export is available in the desktop app"
+                      }
                     />
                   )}
                 </div>
