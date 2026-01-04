@@ -701,7 +701,7 @@ body {
   display: flex;
   align-items: center;
   padding: var(--dash-header-pad-y) var(--dash-header-pad-x);
-  padding-right: 112px;
+  padding-right: 156px;
   gap: var(--dash-header-gap);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent);
@@ -762,6 +762,35 @@ body {
 
 .dash-settings:hover {
   background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.dash-compact-toggle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: none;
+  color: #b8b5d6;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  position: absolute;
+  top: var(--dash-header-pad-y);
+  right: calc(var(--dash-header-pad-x) + 88px);
+  z-index: 1003;
+  pointer-events: auto;
+}
+
+.dash-compact-toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.dash-compact-toggle.active {
+  background: rgba(124, 58, 237, 0.35);
   color: #fff;
 }
 
@@ -965,6 +994,57 @@ body {
   z-index: 1002;
   transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
   pointer-events: auto;
+}
+
+.dash-select-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+}
+
+.dash-select-row .dash-select-wrapper {
+  margin-bottom: 0;
+}
+
+.dash-select-row .dash-select-wrapper.dropdown-open {
+  margin-bottom: var(--dropdown-open-space);
+}
+
+.compact-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.compact-tool {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  color: #d8d6f0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.compact-tool:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.compact-tool.exit {
+  background: rgba(255, 86, 126, 0.18);
+  color: #ffb3cc;
+}
+
+.compact-tool.exit:hover {
+  background: rgba(255, 86, 126, 0.32);
+  color: #fff;
 }
 
 .dash-select { position: relative; z-index: 11; }
@@ -1320,6 +1400,101 @@ body {
   width: 100%;
   height: 100%;
   filter: none;
+}
+
+.waveform-scrubber-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 0 8px;
+  box-sizing: border-box;
+}
+
+.waveform-scrubber-time {
+  min-width: 44px;
+  text-align: center;
+  font: 600 12px "Inter", sans-serif;
+  color: #ecebff;
+  background: rgba(20, 18, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+
+.waveform-scrubber {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0.6), rgba(255, 7, 164, 0.6));
+  outline: none;
+  cursor: pointer;
+}
+
+.waveform-scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f7f2ff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.6);
+}
+
+.waveform-scrubber::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #f7f2ff;
+  border: 2px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.waveform-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(180, 160, 255, 0.35) transparent;
+  overscroll-behavior-x: contain;
+  border-radius: 18px;
+}
+
+.waveform-scroll::-webkit-scrollbar {
+  height: 6px;
+}
+
+.waveform-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.waveform-scroll::-webkit-scrollbar-thumb {
+  background: rgba(180, 160, 255, 0.35);
+  border-radius: 999px;
+}
+
+.waveform-endcap {
+  position: absolute;
+  top: 14px;
+  bottom: 14px;
+  width: 16px;
+  border: 2px solid rgba(243, 239, 255, 0.7);
+  border-radius: 14px;
+  z-index: 6;
+  pointer-events: none;
+}
+
+.waveform-endcap.left {
+  left: 6px;
+  border-right: none;
+}
+
+.waveform-endcap.right {
+  right: 6px;
+  border-left: none;
 }
 
 .waveform-player > div {
@@ -2045,6 +2220,531 @@ body {
 }
 
 .split-audio-btn:active { transform: translateY(0); }
+
+/* =========================
+   COMPACT MODE
+   ========================= */
+
+.dashboard.compact {
+  border-radius: 36px;
+}
+
+.dashboard.compact::after {
+  width: 140px;
+  height: 140px;
+  right: 40px;
+  top: 140px;
+  opacity: 0.5;
+}
+
+.dashboard.compact .dash-header {
+  --dash-header-pad-y: 10px;
+  --dash-header-pad-x: 14px;
+  gap: 12px;
+  padding-right: 190px;
+}
+
+.dashboard.compact .dash-info {
+  min-width: 0;
+}
+
+.dashboard.compact .dash-compact-toggle {
+  display: none;
+}
+
+.dashboard.compact .dash-settings,
+.dashboard.compact .dash-close {
+  display: none;
+}
+
+.dashboard.compact .compact-window-controls {
+  position: absolute;
+  top: var(--dash-header-pad-y);
+  right: var(--dash-header-pad-x);
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: rgba(16, 16, 34, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 1004;
+}
+
+.dashboard.compact .compact-window-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #d8d6f0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dashboard.compact .compact-window-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.dashboard.compact .compact-window-btn.exit {
+  background: rgba(255, 86, 126, 0.18);
+  color: #ffb3cc;
+}
+
+.dashboard.compact .compact-window-btn.exit:hover {
+  background: rgba(255, 86, 126, 0.32);
+  color: #fff;
+}
+
+.dashboard.compact .dash-thumbnail {
+  width: 44px;
+  height: 44px;
+  border-radius: 22px;
+}
+
+.dashboard.compact .dash-thumbnail.local-file-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.dashboard.compact .dash-title {
+  font-size: 16px;
+  line-height: 1.15;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dashboard.compact .dash-artist {
+  font-size: 10px;
+}
+
+.dashboard.compact .dash-content {
+  flex-direction: column;
+  padding: 16px;
+  gap: 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.dashboard.compact .dash-waveform-container {
+  order: 1;
+  flex: 1.05;
+  min-height: 0;
+  width: 100%;
+  padding: 16px;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 14px;
+  border-radius: 28px;
+  background: rgba(18, 18, 34, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.45);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dashboard.compact .dash-sidebar {
+  order: 2;
+  width: 100%;
+  height: auto;
+  flex: 1;
+  min-height: 0;
+  border-radius: 28px;
+  padding: 16px 16px 18px;
+  --control-text-indent: 18px;
+  background: rgba(18, 18, 34, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4);
+  box-sizing: border-box;
+}
+
+.dashboard.compact .compact-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: -2px -2px 8px;
+  padding: 4px 2px 8px;
+  border-radius: 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(18, 18, 34, 0.98) 0%,
+    rgba(18, 18, 34, 0.65) 65%,
+    rgba(18, 18, 34, 0) 100%
+  );
+}
+
+.dashboard.compact .compact-tool {
+  width: 26px;
+  height: 26px;
+}
+
+.dashboard.compact .dash-controls {
+  flex: none;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.dashboard.compact .dash-select-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dashboard.compact .dash-select-row .dash-select-wrapper {
+  margin-bottom: 0;
+}
+
+.dashboard.compact .dash-select-row .dash-select-wrapper.dropdown-open {
+  margin-bottom: var(--dropdown-open-space);
+}
+
+.dashboard.compact .dash-select-wrapper {
+  --dropdown-open-space: 110px;
+  margin-bottom: 8px;
+}
+
+.dashboard.compact .dash-select {
+  height: 36px;
+  font-size: 12.5px;
+  border-radius: 18px;
+}
+
+.dashboard.compact .dash-select-chevron {
+  right: 12px;
+}
+
+.dashboard.compact .dash-dropdown {
+  border-radius: 20px;
+  max-height: 110px;
+}
+
+.dashboard.compact .dash-option {
+  font-size: 12.5px;
+  padding: 6px 14px;
+  padding-left: 32px;
+}
+
+.dashboard.compact .advanced-controls {
+  gap: 10px;
+  padding: 4px 4px 6px;
+}
+
+.dashboard.compact .advanced-slider label {
+  font-size: 12px;
+}
+
+.dashboard.compact .advanced-slider input[type="range"] {
+  height: 6px;
+}
+
+.dashboard.compact .advanced-slider input[type="range"]::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+.dashboard.compact .advanced-slider input[type="range"]::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+.dashboard.compact .stem-list {
+  --bar-w: 0px;
+  --bar-gap: 0px;
+  --dot-size: 13px;
+  position: relative;
+  bottom: auto;
+  left: auto;
+  right: auto;
+  margin-top: 18px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px 12px;
+}
+
+.dashboard.compact .stem-list::before {
+  display: none;
+}
+
+.dashboard.compact .stem-item {
+  height: 34px;
+  border-radius: 14px;
+  background: rgba(26, 23, 52, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0 12px 0 30px;
+}
+
+.dashboard.compact .stem-item.active {
+  background: rgba(124, 58, 237, 0.22);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+.dashboard.compact .stem-dot {
+  left: 10px;
+}
+
+.dashboard.compact .stem-item.active .stem-dot::after {
+  inset: -2px;
+}
+
+.dashboard.compact .stem-label {
+  font-size: 12.5px;
+  letter-spacing: 0.2px;
+}
+
+.dashboard.compact .split-audio-btn {
+  width: min(300px, 74%);
+  height: 38px;
+  font-size: 11.5px;
+  letter-spacing: 0.5px;
+  margin: 10px auto 0;
+}
+
+.dashboard.compact .waveform-wrapper {
+  max-width: 100%;
+  margin: 8px 0 12px;
+  padding: 10px 22px 22px;
+  gap: 10px;
+}
+
+.dashboard.compact .waveform-scroll {
+  padding: 0 10px 6px;
+  background: rgba(12, 12, 24, 0.45);
+  border-radius: 20px;
+}
+
+.dashboard.compact .waveform-scrubber-row {
+  padding: 0 12px;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.dashboard.compact .waveform-scrubber-time {
+  min-width: 40px;
+  font-size: 11px;
+  padding: 3px 8px;
+}
+
+.dashboard.compact .waveform-scrubber {
+  height: 5px;
+}
+
+.dashboard.compact .waveform-scrubber::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+.dashboard.compact .waveform-scrubber::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+}
+
+.dashboard.compact .waveform-endcap {
+  top: 10px;
+  bottom: 10px;
+  width: 14px;
+}
+
+.dashboard.compact .waveform-track {
+  width: 100%;
+  margin: 0 auto;
+}
+
+.dashboard.compact .waveform-wrapper.stems {
+  max-width: 100%;
+  margin: 8px 0 12px;
+}
+
+.dashboard.compact .waveform-selection {
+  top: 3px;
+  bottom: 3px;
+  border-radius: 7px;
+}
+
+.dashboard.compact .waveform-handle {
+  bottom: -26px;
+}
+
+.dashboard.compact .waveform-handle-bracket {
+  width: 20px;
+  height: 20px;
+  border-left-width: 3px;
+  border-bottom-width: 3px;
+}
+
+.dashboard.compact .waveform-handle.end .waveform-handle-bracket {
+  border-right-width: 3px;
+}
+
+.dashboard.compact .waveform-handle-time {
+  font-size: 10px;
+}
+
+.dashboard.compact .waveform-time-left,
+.dashboard.compact .waveform-time-right {
+  font-size: 11px;
+}
+
+.dashboard.compact .waveform-time-left {
+  left: 20px;
+}
+
+.dashboard.compact .waveform-time-right {
+  right: 20px;
+}
+
+.dashboard.compact .waveform-playhead-label {
+  top: -22px;
+  font-size: 11px;
+}
+
+.dashboard.compact .waveform-zoom-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  bottom: -40px;
+}
+
+.dashboard.compact .dash-transport {
+  width: 100%;
+  max-width: 260px;
+  margin: 10px auto 0;
+  gap: 10px;
+}
+
+.dashboard.compact .dash-transport::before {
+  width: 100%;
+  height: 40px;
+}
+
+.dashboard.compact .dash-transport::after {
+  width: calc(100% - 4px);
+  height: 40px;
+}
+
+.dashboard.compact .dash-transport.loading::before {
+  width: 52px;
+  height: 52px;
+}
+
+.dashboard.compact .dash-transport.loading::after {
+  width: 56px;
+  height: 56px;
+}
+
+.dashboard.compact .transport-btn {
+  width: 42px;
+  height: 42px;
+}
+
+.dashboard.compact .transport-btn.play {
+  width: 50px;
+  height: 50px;
+}
+
+.dashboard.compact .transport-btn svg {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+.dashboard.compact .transport-btn.play svg {
+  width: 28px !important;
+  height: 28px !important;
+}
+
+.dashboard.compact .stem-stack {
+  width: 100%;
+  max-width: 100%;
+  gap: 12px;
+  align-items: center;
+}
+
+.dashboard.compact .stem-stack-inner {
+  width: min(100%, 360px);
+  min-height: 160px;
+  margin: 0 auto 6px;
+}
+
+.dashboard.compact .stem-card {
+  width: 100%;
+  max-width: 360px;
+  min-height: 150px;
+  padding: 16px;
+  border-radius: 18px;
+}
+
+.dashboard.compact .stem-card-title {
+  font-size: 14px;
+}
+
+.dashboard.compact .stem-card-artist {
+  font-size: 11px;
+}
+
+.dashboard.compact .stem-card-footer {
+  right: 10px;
+  bottom: 10px;
+}
+
+.dashboard.compact .stem-card-time {
+  font-size: 10px;
+}
+
+.dashboard.compact .stem-card-play {
+  width: 34px;
+  height: 34px;
+}
+
+.dashboard.compact .stem-stack-instructions {
+  margin-top: 8px;
+  font-size: 11px;
+}
+
+.dashboard.compact .stem-stack-actions {
+  width: 100%;
+  justify-content: center;
+  align-self: center;
+}
+
+.dashboard.compact .stem-action-pill {
+  padding: 3px;
+}
+
+.dashboard.compact .stem-pill-btn {
+  width: 30px;
+  height: 30px;
+}
+
+.dashboard.compact .stem-stack.expanded {
+  max-width: 100%;
+}
+
+.dashboard.compact .stem-stack.expanded .stem-stack-inner {
+  gap: 18px;
+  align-items: center;
+}
+
+.dashboard.compact .stem-stack.expanded .stem-stack-inner .stem-card.expanded {
+  width: 200px;
+  height: 140px;
+  max-width: 200px;
+  flex: 0 0 200px;
+  border-radius: 18px;
+}
+
+.dashboard.compact .stem-grid-row {
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
 
 /* Make the React page transparent in Electron */
 .is-electron, .is-electron body, .is-electron #root, .is-electron .App { background: transparent !important; }

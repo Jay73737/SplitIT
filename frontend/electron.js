@@ -1,6 +1,14 @@
 // electron.js — main process
 const path = require("path");
-const { app, BrowserWindow, ipcMain, shell, nativeImage, dialog } = require("electron");
+const {
+  app,
+  BrowserWindow,
+  ipcMain,
+  shell,
+  nativeImage,
+  dialog,
+  screen,
+} = require("electron");
 const { spawn } = require("child_process");
 const fetch = require("node-fetch");
 const fs = require("fs");
@@ -67,10 +75,16 @@ let pillWin = null;
 let backendProcess = null;
 let pillDragState = null;
 let waveformDragTimer = null;
+let compactModeEnabled = false;
+let mainWinBoundsBeforeCompact = null;
 
 const BACKEND_HOST = process.env.SPLITME_BACKEND_HOST || "127.0.0.1";
 const BACKEND_PORT = parseInt(process.env.SPLITME_BACKEND_PORT || "5050", 10);
 const BACKEND_URL = `http://${BACKEND_HOST}:${BACKEND_PORT}`;
+const MAIN_WINDOW_WIDTH = 1400;
+const MAIN_WINDOW_HEIGHT = 900;
+const COMPACT_WINDOW_WIDTH = 520;
+const COMPACT_WINDOW_HEIGHT = 900;
 
 function resourcePath(...segments) {
   if (!segments.length) {
@@ -253,10 +267,68 @@ function abs(p) {
   return path.join(app.getAppPath(), p);
 }
 
+function getCompactBounds() {
+  if (!mainWin) return null;
+  const current = mainWin.getBounds();
+  const display = screen.getDisplayMatching(current);
+  const workArea = display.workArea;
+  const anchorRight = current.x + current.width;
+  const nextWidth = COMPACT_WINDOW_WIDTH;
+  const nextHeight = COMPACT_WINDOW_HEIGHT;
+  let nextX = anchorRight - nextWidth;
+  let nextY = current.y;
+
+  if (nextX < workArea.x) nextX = workArea.x;
+  if (nextX + nextWidth > workArea.x + workArea.width) {
+    nextX = workArea.x + workArea.width - nextWidth;
+  }
+  if (nextY < workArea.y) nextY = workArea.y;
+  if (nextY + nextHeight > workArea.y + workArea.height) {
+    nextY = workArea.y + workArea.height - nextHeight;
+  }
+
+  return {
+    x: Math.round(nextX),
+    y: Math.round(nextY),
+    width: nextWidth,
+    height: nextHeight,
+  };
+}
+
+function setCompactMode(enabled) {
+  if (!mainWin || mainWin.isDestroyed()) return;
+  const shouldEnable = Boolean(enabled);
+  if (shouldEnable === compactModeEnabled) return;
+
+  if (shouldEnable) {
+    mainWinBoundsBeforeCompact = mainWin.getBounds();
+    const targetBounds = getCompactBounds();
+    try {
+      if (isMac) mainWin.setAlwaysOnTop(true, "floating");
+      else mainWin.setAlwaysOnTop(true);
+    } catch {}
+    if (targetBounds) {
+      mainWin.setBounds(targetBounds, true);
+    }
+  } else {
+    if (mainWinBoundsBeforeCompact) {
+      mainWin.setBounds(mainWinBoundsBeforeCompact, true);
+    } else {
+      mainWin.setSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT, true);
+    }
+    try {
+      mainWin.setAlwaysOnTop(false);
+    } catch {}
+    mainWinBoundsBeforeCompact = null;
+  }
+
+  compactModeEnabled = shouldEnable;
+}
+
 function createMainWindow() {
   mainWin = new BrowserWindow({
-    width: 1400, // Reduced for better screen fit
-    height: 900, // Reduced for better screen fit
+    width: MAIN_WINDOW_WIDTH, // Reduced for better screen fit
+    height: MAIN_WINDOW_HEIGHT, // Reduced for better screen fit
     resizable: false,
 
     frame: false,
@@ -295,6 +367,8 @@ function createMainWindow() {
     mainWin = null;
     if (pillWin && !pillWin.isDestroyed()) pillWin.close();
     pillWin = null;
+    compactModeEnabled = false;
+    mainWinBoundsBeforeCompact = null;
   });
 }
 
@@ -793,6 +867,19 @@ ipcMain.on("waveform:drag-end", () => {
   } catch (error) {
     logMain("waveform-drag-ignore-error", { message: error.message });
   }
+});
+
+ipcMain.on("window:set-compact-mode", (_event, enabled) => {
+  setCompactMode(enabled);
+});
+
+ipcMain.on("window:minimize", () => {
+  if (!mainWin || mainWin.isDestroyed()) return;
+  mainWin.minimize();
+});
+
+ipcMain.on("window:quit", () => {
+  app.quit();
 });
 
 ipcMain.handle("settings:get-default-folder", () => app.getPath("downloads"));

@@ -59,6 +59,7 @@ export default function DashboardView({ video, onBack }) {
   const [waveformInstance, setWaveformInstance] = useState(null);
   const [waveformPlaying, setWaveformPlaying] = useState(false);
   const waveformTrackRef = useRef(null);
+  const waveformScrollRef = useRef(null);
   const [waveformMask, setWaveformMask] = useState(null);
   const volume = DEFAULT_VOLUME;
   const reactivity = DEFAULT_REACTIVITY;
@@ -86,6 +87,7 @@ export default function DashboardView({ video, onBack }) {
   const audioContextRef = useRef(null);
   const decodedAudioRef = useRef(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [compactMode, setCompactMode] = useState(false);
   const [advancedMode, setAdvancedMode] = useState(false);
   const [modelOverlap, setModelOverlap] = useState(0.25);
   const [modelShifts, setModelShifts] = useState(4);
@@ -102,6 +104,7 @@ export default function DashboardView({ video, onBack }) {
   const [downloadingAll, setDownloadingAll] = useState(false);
   const electronAPI =
     typeof window !== "undefined" ? window.electronAPI : null;
+  const canUseCompactMode = Boolean(electronAPI?.setCompactMode);
 
   // Load audio from backend for accurate waveform
   useEffect(() => {
@@ -124,6 +127,26 @@ export default function DashboardView({ video, onBack }) {
     electronAPI.getDefaultSaveFolder().then((path) => {
       if (path) setSaveFolderPath(path);
     });
+  }, [electronAPI]);
+
+  const handleCompactToggle = useCallback(
+    (forceValue) => {
+      if (!electronAPI?.setCompactMode) return;
+      setSettingsOpen(false);
+      const next =
+        typeof forceValue === "boolean" ? forceValue : !compactMode;
+      setCompactMode(next);
+      electronAPI.setCompactMode(next);
+    },
+    [compactMode, electronAPI]
+  );
+
+  const handleCompactMinimize = useCallback(() => {
+    electronAPI?.minimizeWindow?.();
+  }, [electronAPI]);
+
+  const handleCompactQuit = useCallback(() => {
+    electronAPI?.quitApp?.();
   }, [electronAPI]);
 
   useEffect(() => {
@@ -1256,6 +1279,25 @@ export default function DashboardView({ video, onBack }) {
     }
   }, [showStemStack, waveformInstance]);
 
+  const scrollWaveformToTime = useCallback(
+    (time, behavior = "auto") => {
+      if (!compactMode) return;
+      const scrollEl = waveformScrollRef.current;
+      if (!scrollEl || !duration) return;
+      const scrollWidth = scrollEl.scrollWidth;
+      const clientWidth = scrollEl.clientWidth;
+      if (scrollWidth <= clientWidth) return;
+      const ratio = Math.max(0, Math.min(1, time / duration));
+      const target = ratio * (scrollWidth - clientWidth);
+      if (typeof scrollEl.scrollTo === "function") {
+        scrollEl.scrollTo({ left: target, behavior });
+      } else {
+        scrollEl.scrollLeft = target;
+      }
+    },
+    [compactMode, duration]
+  );
+
   if (!video) return null;
 
   const audioFormatOptions = [
@@ -1270,7 +1312,16 @@ export default function DashboardView({ video, onBack }) {
   ];
 
   const rate = 1;
-  const waveformHeight = 200;
+  const waveformHeight = compactMode ? 140 : 200;
+  const waveformScrollPxPerSec = compactMode ? 22 : 18;
+  const waveformScrollWidth = duration
+    ? Math.min(12000, Math.max(duration * waveformScrollPxPerSec, 0))
+    : null;
+  const waveformTrackStyle = {
+    "--waveform-height": `${waveformHeight}px`,
+    width: waveformScrollWidth ? `${Math.max(waveformScrollWidth, 1)}px` : "100%",
+    minWidth: "100%",
+  };
   const progress = duration ? Math.min(1, current / duration) : 0;
   const playheadPosition = Math.min(Math.max(progress, 0), 1);
   const gradientPlaying = waveformInstance ? waveformPlaying : playing;
@@ -1312,6 +1363,7 @@ export default function DashboardView({ video, onBack }) {
     if (waveformInstance?.setTime) {
       waveformInstance.setTime(targetTime);
       setCurrent(targetTime);
+      scrollWaveformToTime(targetTime, "smooth");
       return;
     }
     if (video.isLocalFile) {
@@ -1321,11 +1373,12 @@ export default function DashboardView({ video, onBack }) {
     } else {
       ytRef.current?.seek(targetTime);
     }
+    scrollWaveformToTime(targetTime, "smooth");
   };
 
   return (
     <motion.div
-      className="dashboard"
+      className={`dashboard${compactMode ? " compact" : ""}`}
       initial={{ opacity: 0, scale: 0.98 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.98 }}
@@ -1369,6 +1422,121 @@ export default function DashboardView({ video, onBack }) {
           <h2 className="dash-title">{video.title}</h2>
           <p className="dash-artist">{video.channel}</p>
         </div>
+        {compactMode && canUseCompactMode && (
+          <div
+            className="compact-window-controls"
+            style={{ WebkitAppRegion: "no-drag" }}
+          >
+            <button
+              type="button"
+              className="compact-window-btn"
+              onClick={() => setSettingsOpen(true)}
+              title="Settings"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="M19.4 15a1.6 1.6 0 00.32 1.76l.06.06a1.8 1.8 0 01-2.55 2.55l-.06-.06a1.6 1.6 0 00-1.76-.32 1.6 1.6 0 00-1 1.46V21a1.8 1.8 0 01-3.6 0v-.1a1.6 1.6 0 00-1-1.46 1.6 1.6 0 00-1.76.32l-.06.06a1.8 1.8 0 01-2.55-2.55l.06-.06A1.6 1.6 0 005 15a1.6 1.6 0 00-1.46-1H3.5a1.8 1.8 0 010-3.6h.1A1.6 1.6 0 005 8.94a1.6 1.6 0 00-.32-1.76l-.06-.06a1.8 1.8 0 012.55-2.55l.06.06A1.6 1.6 0 008.94 5a1.6 1.6 0 001-1.46V3.5a1.8 1.8 0 013.6 0v.1A1.6 1.6 0 0015 5a1.6 1.6 0 001.76-.32l.06-.06a1.8 1.8 0 012.55 2.55l-.06.06A1.6 1.6 0 0019 8.94a1.6 1.6 0 001.46 1h.1a1.8 1.8 0 010 3.6h-.1a1.6 1.6 0 00-1.46 1z"
+                  stroke="currentColor"
+                  strokeWidth="1.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="compact-window-btn"
+              onClick={() => handleCompactToggle(false)}
+              title="Expand view"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="compact-window-btn"
+              onClick={handleCompactMinimize}
+              title="Minimize"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M5 12h14"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+            <button
+              type="button"
+              className="compact-window-btn exit"
+              onClick={handleCompactQuit}
+              title="Exit SplitMe"
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+        )}
+        {canUseCompactMode && (
+          <button
+            className={`dash-compact-toggle${compactMode ? " active" : ""}`}
+            onClick={() => handleCompactToggle()}
+            style={{ WebkitAppRegion: "no-drag" }}
+            title={compactMode ? "Exit compact mode" : "Enter compact mode"}
+          >
+            {compactMode ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <rect
+                  x="5"
+                  y="5"
+                  width="14"
+                  height="14"
+                  rx="2.5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
+                <rect
+                  x="9"
+                  y="9"
+                  width="6"
+                  height="6"
+                  rx="1.5"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                />
+              </svg>
+            )}
+          </button>
+        )}
         <button
           className="dash-settings"
           onClick={() => setSettingsOpen(true)}
@@ -1477,21 +1645,23 @@ export default function DashboardView({ video, onBack }) {
       <div className="dash-content" style={{ WebkitAppRegion: "no-drag" }}>
         <div className="dash-sidebar">
           <div className="dash-controls">
-            <CustomDropdown
-              options={audioFormatOptions}
-              placeholder="Select audio format"
-              value={audioFormat}
-              onChange={setAudioFormat}
-              pushContent={!advancedMode}
-            />
+            <div className="dash-select-row">
+              <CustomDropdown
+                options={audioFormatOptions}
+                placeholder="Select audio format"
+                value={audioFormat}
+                onChange={setAudioFormat}
+                pushContent={!advancedMode}
+              />
 
-            <CustomDropdown
-              options={aiModelOptions}
-              placeholder="Select AI Model"
-              value={aiModel}
-              onChange={setAiModel}
-              pushContent={false}
-            />
+              <CustomDropdown
+                options={aiModelOptions}
+                placeholder="Select AI Model"
+                value={aiModel}
+                onChange={setAiModel}
+                pushContent={false}
+              />
+            </div>
 
             {advancedMode && (
               <div className="advanced-controls">
@@ -1609,138 +1779,169 @@ export default function DashboardView({ video, onBack }) {
             )}
 
             {showWaveform && (
-              <div
-                className="waveform-track"
-                ref={waveformTrackRef}
-                style={{ "--waveform-height": `${waveformHeight}px` }}
-              >
-                <div className="waveform-layer muted">
-                  <WaveformPlayer
-                    url={backendAudioUrl}
-                    blob={audioBlob}
-                    height={waveformHeight}
-                    interact={false}
-                    normalize
-                    barHeight={1}
-                    waveColor="rgba(255, 255, 255, 0.25)"
-                    progressColor="rgba(255, 255, 255, 0.25)"
-                    onWaveformReady={handleMutedWaveformReady}
-                    onPlayStateChange={null}
-                  />
-                </div>
-                <div
-                  className={`waveform-layer active${waveformMask ? " gradient-active" : ""}`}
-                  style={{ clipPath: activeClip }}
-                >
-                  <WaveformPlayer
-                    url={backendAudioUrl}
-                    blob={audioBlob}
-                    height={waveformHeight}
-                    normalize
-                    barHeight={1}
-                    onWaveformReady={handleWaveformReady}
-                    onPlayStateChange={handleWaveformPlayStateChange}
-                  />
-                  {waveformMask && (
-                    <canvas
-                      ref={gradientCanvasRef}
-                      className={`waveform-gradient-canvas${
-                        gradientPlaying ? " playing" : ""
-                      }`}
+              <>
+                {compactMode && (
+                  <div className="waveform-scrubber-row">
+                    <span className="waveform-scrubber-time">
+                      {formatTime(current)}
+                    </span>
+                    <input
+                      className="waveform-scrubber"
+                      type="range"
+                      min="0"
+                      max={duration || 0}
+                      step="0.01"
+                      value={Math.min(current, duration || 0)}
+                      onChange={(event) => seek(Number(event.target.value))}
+                      disabled={!duration}
+                      aria-label="Time scrubber"
                     />
-                  )}
-                </div>
-                <div
-                  className="waveform-selection-layer"
-                  onPointerDown={startSelectionDrag}
-                >
-                  {showSelectionOverlay && (
-                    <div
-                      className="waveform-selection"
-                      style={{
-                        left: `${exportStartPct * 100}%`,
-                        width: `${exportWidthPct * 100}%`,
-                      }}
-                      draggable={Boolean(electronAPI && clipReady)}
-                      onPointerDown={(event) => event.stopPropagation()}
-                      onDragStart={handleSelectionDragStart}
-                      onDragEnd={() => electronAPI?.dragWaveformEnd?.()}
-                      title={
-                        electronAPI
-                          ? clipReady
-                            ? "Drag to export WAV clip"
-                            : "Preparing clip export..."
-                          : "Clip export is available in the desktop app"
-                      }
-                    />
-                  )}
-                </div>
-                {advancedMode && (
-                  <button
-                    type="button"
-                    className={`waveform-zoom-btn${waveformZoomed ? " active" : ""}`}
-                    onClick={handleZoomToggle}
-                    disabled={!waveformInstance}
-                    title={waveformZoomed ? "Reset zoom" : "Zoom waveform"}
+                    <span className="waveform-scrubber-time">
+                      {formatTime(duration || 0)}
+                    </span>
+                  </div>
+                )}
+                <div className="waveform-scroll" ref={waveformScrollRef}>
+                  <div
+                    className="waveform-track"
+                    ref={waveformTrackRef}
+                    style={waveformTrackStyle}
                   >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <circle
-                        cx="11"
-                        cy="11"
-                        r="6.5"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
+                    {compactMode && (
+                      <>
+                        <span className="waveform-endcap left" />
+                        <span className="waveform-endcap right" />
+                      </>
+                    )}
+                  <div className="waveform-layer muted">
+                    <WaveformPlayer
+                      url={backendAudioUrl}
+                      blob={audioBlob}
+                      height={waveformHeight}
+                      interact={false}
+                      normalize
+                      barHeight={1}
+                      waveColor="rgba(255, 255, 255, 0.25)"
+                      progressColor="rgba(255, 255, 255, 0.25)"
+                      onWaveformReady={handleMutedWaveformReady}
+                      onPlayStateChange={null}
+                    />
+                  </div>
+                  <div
+                    className={`waveform-layer active${waveformMask ? " gradient-active" : ""}`}
+                    style={{ clipPath: activeClip }}
+                  >
+                    <WaveformPlayer
+                      url={backendAudioUrl}
+                      blob={audioBlob}
+                      height={waveformHeight}
+                      normalize
+                      barHeight={1}
+                      onWaveformReady={handleWaveformReady}
+                      onPlayStateChange={handleWaveformPlayStateChange}
+                    />
+                    {waveformMask && (
+                      <canvas
+                        ref={gradientCanvasRef}
+                        className={`waveform-gradient-canvas${
+                          gradientPlaying ? " playing" : ""
+                        }`}
                       />
-                      <path
-                        d="M16.5 16.5L21 21"
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinecap="round"
+                    )}
+                  </div>
+                  <div
+                    className="waveform-selection-layer"
+                    onPointerDown={startSelectionDrag}
+                  >
+                    {showSelectionOverlay && (
+                      <div
+                        className="waveform-selection"
+                        style={{
+                          left: `${exportStartPct * 100}%`,
+                          width: `${exportWidthPct * 100}%`,
+                        }}
+                        draggable={Boolean(electronAPI && clipReady)}
+                        onPointerDown={(event) => event.stopPropagation()}
+                        onDragStart={handleSelectionDragStart}
+                        onDragEnd={() => electronAPI?.dragWaveformEnd?.()}
+                        title={
+                          electronAPI
+                            ? clipReady
+                              ? "Drag to export WAV clip"
+                              : "Preparing clip export..."
+                            : "Clip export is available in the desktop app"
+                        }
                       />
-                      <path
-                        d="M11 8.5v5M8.5 11h5"
-                        stroke="currentColor"
-                        strokeWidth="1.6"
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                  </button>
-                )}
-                {showTimeline && (
-                  <>
-                    <div
-                      className="waveform-handle start"
-                      style={{ left: `${selectionStartPct * 100}%` }}
-                      onPointerDown={startDrag("start")}
+                    )}
+                  </div>
+                  {advancedMode && (
+                    <button
+                      type="button"
+                      className={`waveform-zoom-btn${waveformZoomed ? " active" : ""}`}
+                      onClick={handleZoomToggle}
+                      disabled={!waveformInstance}
+                      title={waveformZoomed ? "Reset zoom" : "Zoom waveform"}
                     >
-                      <div className="waveform-handle-bracket" />
-                      <div className="waveform-handle-time">
-                        {formatTime(selectionStart)}
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                        <circle
+                          cx="11"
+                          cy="11"
+                          r="6.5"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                        />
+                        <path
+                          d="M16.5 16.5L21 21"
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinecap="round"
+                        />
+                        <path
+                          d="M11 8.5v5M8.5 11h5"
+                          stroke="currentColor"
+                          strokeWidth="1.6"
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                    </button>
+                  )}
+                  {showTimeline && (
+                    <>
+                      <div
+                        className="waveform-handle start"
+                        style={{ left: `${selectionStartPct * 100}%` }}
+                        onPointerDown={startDrag("start")}
+                      >
+                        <div className="waveform-handle-bracket" />
+                        <div className="waveform-handle-time">
+                          {formatTime(selectionStart)}
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      className="waveform-handle end"
-                      style={{ left: `${selectionEndPct * 100}%` }}
-                      onPointerDown={startDrag("end")}
-                    >
-                      <div className="waveform-handle-bracket" />
-                      <div className="waveform-handle-time">
-                        {formatTime(selectionEnd)}
+                      <div
+                        className="waveform-handle end"
+                        style={{ left: `${selectionEndPct * 100}%` }}
+                        onPointerDown={startDrag("end")}
+                      >
+                        <div className="waveform-handle-bracket" />
+                        <div className="waveform-handle-time">
+                          {formatTime(selectionEnd)}
+                        </div>
                       </div>
-                    </div>
-                    <div
-                      className="waveform-playhead"
-                      style={{ left: `${playheadPosition * 100}%` }}
-                      onPointerDown={startDrag("playhead")}
-                    >
-                      <div className="waveform-playhead-label">
-                        {formatTime(current)}
+                      <div
+                        className="waveform-playhead"
+                        style={{ left: `${playheadPosition * 100}%` }}
+                        onPointerDown={startDrag("playhead")}
+                      >
+                        <div className="waveform-playhead-label">
+                          {formatTime(current)}
+                        </div>
+                        <div className="waveform-playhead-line" />
                       </div>
-                      <div className="waveform-playhead-line" />
-                    </div>
-                  </>
-                )}
-              </div>
+                    </>
+                  )}
+                  </div>
+                </div>
+              </>
             )}
 
             {!audioLoading && audioError && (

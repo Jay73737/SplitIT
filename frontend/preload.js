@@ -16,6 +16,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   onPillSubmit: (fn) => ipcRenderer.on("pill:submit", (_e, v) => fn(v)),
   resultsOpened: (height) => ipcRenderer.send("results-opened", height),
   resultsClosed: () => ipcRenderer.send("results-closed"),
+  setCompactMode: (enabled) =>
+    ipcRenderer.send("window:set-compact-mode", Boolean(enabled)),
+  minimizeWindow: () => ipcRenderer.send("window:minimize"),
+  quitApp: () => ipcRenderer.send("window:quit"),
   downloadStems: (payload) => ipcRenderer.invoke("stems:download-all", payload),
   dragStem: (payload) => ipcRenderer.send("stems:drag-file", payload),
   dragWaveformClip: (payload) => ipcRenderer.send("waveform:drag-clip", payload),
