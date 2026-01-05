@@ -21,3 +21,6 @@ tmp_stems_silence/
 frontend/electron-dev-run.log
 backend-run.log
 frontend/electron-dev-run.log
+frontend/electron-dev-run.log
+backend-run.log
+splitme-launch.log
