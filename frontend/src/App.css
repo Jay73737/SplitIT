@@ -1,3 +1,11 @@
+:root {
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --motion-ease-soft: cubic-bezier(0.33, 1, 0.68, 1);
+  --motion-fast: 0.22s;
+  --motion-med: 0.35s;
+  --motion-slow: 0.55s;
+}
+
 body {
   margin: 0;
   background: transparent;
@@ -60,7 +68,7 @@ body {
   border: 2px solid transparent;
   background-clip: padding-box;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-  transition: all 0.3s ease;
+  transition: all var(--motion-med) var(--motion-ease);
 }
 
 .pill-window.intro {
@@ -68,7 +76,7 @@ body {
   height: 140px;
   border-radius: 999px;
   transition: none;
-  animation: pillIntroMorph 1.9s cubic-bezier(0.22, 1.15, 0.36, 1) 5s forwards;
+  animation: pillIntroMorph 2.8s var(--motion-ease-soft) 5s forwards;
 }
 
 .pill-window.intro .pill-input,
@@ -84,7 +92,7 @@ body {
   overflow: hidden;
   z-index: 1;
   pointer-events: none;
-  animation: introStarsFade 1s ease 4s forwards;
+  animation: introStarsFade 1s var(--motion-ease) 4s forwards;
 }
 
 .pill-intro-canvas {
@@ -170,7 +178,7 @@ body {
     86px 62px rgba(255,255,255,0.85),
     41px 29px rgba(255,255,255,0.85),
     51px 61px rgba(255,255,255,0.85);
-  animation: starSpin 2.4s linear infinite, starsWhiteFade 1.4s ease 0.6s forwards;
+  animation: starSpin 2.4s linear infinite, starsWhiteFade 1.4s var(--motion-ease) 0.6s forwards;
 }
 
 .pill-intro-stars::after {
@@ -230,7 +238,7 @@ body {
   mix-blend-mode: screen;
   animation:
     starSpin 3.6s linear infinite,
-    starsColorRise 1.6s ease 0.6s forwards,
+    starsColorRise 1.6s var(--motion-ease) 0.6s forwards,
     starsHueSpin 3.6s linear infinite;
 }
 
@@ -267,17 +275,17 @@ body {
     border-radius: 999px;
     transform: scale(1);
   }
-  65% {
-    width: 840px;
-    height: 72px;
-    border-radius: 44px;
-    transform: scale(1.02);
+  60% {
+    width: 820px;
+    height: 70px;
+    border-radius: 42px;
+    transform: scale(1.01);
   }
-  82% {
+  85% {
     width: 790px;
     height: 62px;
-    border-radius: 36px;
-    transform: scale(0.995);
+    border-radius: 37px;
+    transform: scale(0.998);
   }
   100% {
     width: 800px;
@@ -317,7 +325,7 @@ body {
   animation:
     pillBorderIntroSpin 5s linear 0s 1 forwards,
     pillBorder 4s linear 5s infinite,
-    pillIntroGlow 5s ease forwards;
+    pillIntroGlow 5s var(--motion-ease) forwards;
 }
 
 @keyframes pillBorder {
@@ -446,7 +454,7 @@ body {
   -webkit-backdrop-filter: blur(25px);
   cursor: pointer;
   overflow: hidden;
-  transition: transform 0.2s, background 0.2s;
+  transition: transform var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease);
 }
 
 .video-card:hover {
@@ -509,7 +517,7 @@ body {
   inset: 0;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--motion-med) var(--motion-ease);
   z-index: 1;
   transform-origin: 50% 50%;
   will-change: transform;
@@ -752,7 +760,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
   position: absolute;
   top: var(--dash-header-pad-y);
   right: calc(var(--dash-header-pad-x) + 44px);
@@ -776,7 +784,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
   position: absolute;
   top: var(--dash-header-pad-y);
   right: calc(var(--dash-header-pad-x) + 88px);
@@ -805,7 +813,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
   position: absolute;
   top: var(--dash-header-pad-y);
   right: var(--dash-header-pad-x);
@@ -875,7 +883,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
 }
 
 .settings-close:hover {
@@ -942,7 +950,7 @@ body {
   font: 600 12px/1 "Inter", sans-serif;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
 }
 
 .settings-toggle.active {
@@ -992,7 +1000,7 @@ body {
   margin-bottom: 20px;
   position: relative;
   z-index: 1002;
-  transition: all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transition: all var(--motion-med) var(--motion-ease);
   pointer-events: auto;
 }
 
@@ -1028,7 +1036,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
 }
 
 .compact-tool:hover {
@@ -1108,10 +1116,6 @@ body {
   cursor: pointer;
 }
 
-/* =========================
-   STEM LIST + BAR ALIGNMENT
-   ========================= */
-
 .stem-list {
   --bar-w: 28px;
   --bar-gap: calc(var(--control-text-indent, 36px) - var(--bar-w));
@@ -1170,7 +1174,7 @@ body {
   padding: 0;
   border-radius: 10px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
   z-index: 1;
   pointer-events: auto;
 }
@@ -1187,7 +1191,7 @@ body {
   height: var(--dot-size);
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, #666, #444);
-  transition: all 0.3s;
+  transition: all var(--motion-med) var(--motion-ease);
   flex-shrink: 0;
   pointer-events: none;
 }
@@ -1203,7 +1207,7 @@ body {
   inset: -4px;
   border-radius: 50%;
   background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), transparent);
-  animation: pulse 2s infinite;
+  animation: pulse 2s var(--motion-ease-soft) infinite;
 }
 
 @keyframes pulse {
@@ -1214,7 +1218,7 @@ body {
 .stem-label {
   color: #b8b5d6;
   font: 500 18px "Inter", sans-serif;
-  transition: color 0.2s;
+  transition: color var(--motion-fast) var(--motion-ease);
   letter-spacing: 0.5px;
 }
 
@@ -1223,13 +1227,7 @@ body {
   text-shadow: 0 0 18px rgba(255, 255, 255, 0.5);
 }
 
-/* =========================
-   (end) STEM LIST CHUNK
-   ========================= */
-
 .dash-select { position: relative; z-index: 11; }
-
-/* ===== DROPDOWN (UPDATED) ===== */
 
 .dash-dropdown {
   position: absolute;
@@ -1256,23 +1254,19 @@ body {
   transform: translateY(0) scaleY(1);
 }
 
-/* Reserve space when a dropdown is open so the next control won't overlap */
 .dash-select-wrapper {
   position: relative;
   width: 100%;
   box-sizing: border-box;
   --dropdown-open-space: 156px;   /* 140px list + 8px padding + ~8px buffer */
   margin-bottom: 10px;
-  transition: margin-bottom 0.25s ease;
+  transition: margin-bottom var(--motion-med) var(--motion-ease);
 }
 .dash-select-wrapper.open { z-index: 1204; }
 .dash-select-wrapper.dropdown-open {
   margin-bottom: var(--dropdown-open-space);
   z-index: 1204;
 }
-
-/* Remove the old sibling transform hack to avoid weird gaps */
-/* .dash-select-wrapper.dropdown-open + .dash-select-wrapper { transform: translateY(180px); } */
 
 .dash-option {
   padding: 8px 18px;
@@ -1365,6 +1359,7 @@ body {
   max-width: 100%;
   overflow: visible;
   z-index: 1;
+  --advanced-console-offset: 0px;
 }
 
 .waveform-wrapper {
@@ -1454,13 +1449,17 @@ body {
 
 .waveform-scroll {
   width: 100%;
-  overflow-x: auto;
+  overflow-x: hidden;
   overflow-y: hidden;
   padding-bottom: 8px;
   scrollbar-width: thin;
   scrollbar-color: rgba(180, 160, 255, 0.35) transparent;
   overscroll-behavior-x: contain;
   border-radius: 18px;
+}
+
+.waveform-scroll.scrollable {
+  overflow-x: auto;
 }
 
 .waveform-scroll::-webkit-scrollbar {
@@ -1567,7 +1566,7 @@ body {
   filter: blur(6px);
   transform: translateY(6px);
   pointer-events: none;
-  animation: waveformUiReveal 0.5s ease forwards;
+  animation: waveformUiReveal 0.5s var(--motion-ease) forwards;
   animation-delay: 0.28s;
 }
 
@@ -1646,13 +1645,10 @@ body {
   top: 6px;
   bottom: 6px;
   border-radius: 10px;
-  background: linear-gradient(
-    90deg,
-    rgba(255, 7, 164, 0.2) 0%,
-    rgba(70, 47, 255, 0.18) 100%
-  );
-  border: 1px solid rgba(245, 241, 255, 0.4);
-  box-shadow: 0 14px 30px rgba(255, 7, 164, 0.18);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  opacity: 0;
   cursor: grab;
 }
 
@@ -1676,7 +1672,7 @@ body {
   cursor: pointer;
   z-index: 8;
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-  transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease;
+  transition: transform var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
 }
 
 .waveform-zoom-btn:hover {
@@ -1901,7 +1897,7 @@ body {
   width: 20px;
   cursor: ew-resize;
   z-index: 10;
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast) var(--motion-ease);
 }
 
 .waveform-clip-handle:hover { width: 24px; }
@@ -1917,7 +1913,7 @@ body {
   background: linear-gradient(135deg, #ff0a9c, #c026d3, #7c3aed);
   border-radius: 3px;
   box-shadow: 0 0 12px rgba(255, 10, 156, 0.6), 0 2px 8px rgba(0, 0, 0, 0.3);
-  transition: all 0.2s ease;
+  transition: all var(--motion-fast) var(--motion-ease);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -1935,10 +1931,10 @@ body {
   gap: 16px;
   align-items: center;
   justify-content: center;
-  margin-top: 40px;
+  margin-top: 64px;
   padding: 0 10px;
   position: relative;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--motion-med) var(--motion-ease);
 }
 
 .dash-transport::before {
@@ -1954,7 +1950,7 @@ body {
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.05);
   pointer-events: none;
   z-index: 0;
-  transition: width 0.45s ease, height 0.45s ease, border-radius 0.45s ease, box-shadow 0.45s ease;
+  transition: width var(--motion-slow) var(--motion-ease), height var(--motion-slow) var(--motion-ease), border-radius var(--motion-slow) var(--motion-ease), box-shadow var(--motion-slow) var(--motion-ease);
 }
 
 .dash-transport > * {
@@ -1983,7 +1979,7 @@ body {
   opacity: 0;
   pointer-events: none;
   z-index: 0;
-  transition: opacity 0.35s ease, width 0.45s ease, height 0.45s ease, border-radius 0.45s ease;
+  transition: opacity var(--motion-med) var(--motion-ease), width var(--motion-slow) var(--motion-ease), height var(--motion-slow) var(--motion-ease), border-radius var(--motion-slow) var(--motion-ease);
 }
 
 .dash-transport.loading::before {
@@ -2005,6 +2001,169 @@ body {
   opacity: 0;
   transform: scale(0.92);
   pointer-events: none;
+}
+
+.advanced-console-shell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+  max-width: 100%;
+  align-self: stretch;
+  margin-top: auto;
+  margin-bottom: 0;
+  z-index: 1002;
+  pointer-events: none;
+  transform: translateY(var(--advanced-console-offset, 0px));
+  transition: transform var(--motion-slow) var(--motion-ease);
+}
+
+.dash-waveform-container.has-advanced-console {
+  padding-bottom: 0;
+  box-sizing: border-box;
+}
+
+.advanced-console-pill {
+  width: 220px;
+  height: 10px;
+  border-radius: 999px;
+  background: #0c0c12;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow:
+    inset 0 1px 2px rgba(255, 255, 255, 0.08),
+    inset 0 -2px 5px rgba(0, 0, 0, 0.8),
+    0 8px 18px rgba(0, 0, 0, 0.35);
+  transition: opacity var(--motion-med) var(--motion-ease), transform var(--motion-slow) var(--motion-ease);
+  will-change: transform, opacity;
+}
+
+.advanced-console-panel {
+  width: 100%;
+  background: rgba(9, 9, 16, 0.92);
+  border-radius: 24px;
+  border: 1px solid transparent;
+  box-shadow: none;
+  padding: 0 16px;
+  max-height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  opacity: 0;
+  transform: translateY(18px) scale(0.96);
+  transform-origin: center bottom;
+  transition:
+    max-height var(--motion-slow) var(--motion-ease),
+    opacity var(--motion-med) var(--motion-ease),
+    transform var(--motion-slow) var(--motion-ease),
+    padding var(--motion-med) var(--motion-ease),
+    margin-top var(--motion-med) var(--motion-ease),
+    box-shadow var(--motion-med) var(--motion-ease),
+    border-color var(--motion-med) var(--motion-ease);
+  will-change: transform, opacity, max-height;
+}
+
+.advanced-console-shell.open .advanced-console-panel {
+  max-height: 220px;
+  margin-top: 12px;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  padding: 12px 16px 14px;
+}
+
+.advanced-console-shell.open .advanced-console-pill {
+  opacity: 0;
+  transform: translateY(10px) scale(0.92);
+}
+
+.advanced-console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  color: #dcd9f5;
+  font: 600 12px/1.2 "Inter", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.advanced-console-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.advanced-console-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ff4fbf;
+  box-shadow: 0 0 8px rgba(255, 79, 191, 0.7);
+  animation: consolePulse 1.8s ease-in-out infinite;
+}
+
+.advanced-console-status {
+  font: 600 10px/1 "Inter", sans-serif;
+  color: #ffb6dd;
+  background: rgba(255, 7, 164, 0.12);
+  border: 1px solid rgba(255, 7, 164, 0.35);
+  padding: 4px 10px;
+  border-radius: 999px;
+  letter-spacing: 1px;
+}
+
+.advanced-console-status.idle {
+  color: rgba(205, 206, 230, 0.65);
+  background: rgba(148, 163, 184, 0.12);
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+.advanced-console-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 120px;
+  overflow: hidden;
+  font: 500 12px/1.4 "Space Mono", "SFMono-Regular", "Menlo", monospace;
+  color: #c9c6e4;
+  letter-spacing: 0.1px;
+}
+
+.advanced-console-line {
+  display: flex;
+  gap: 10px;
+  align-items: baseline;
+}
+
+.advanced-console-time {
+  min-width: 56px;
+  color: rgba(180, 172, 212, 0.65);
+}
+
+.advanced-console-message {
+  color: #f2efff;
+}
+
+.advanced-console-cursor {
+  width: 7px;
+  height: 14px;
+  margin-left: 66px;
+  border-radius: 2px;
+  background: #ff07a4;
+  animation: consoleBlink 1s steps(2, start) infinite;
+  opacity: 0.9;
+}
+
+@keyframes consolePulse {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.6); }
+}
+
+@keyframes consoleBlink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0.1; }
 }
 
 
@@ -2049,7 +2208,7 @@ body {
   padding: 28px;
   box-sizing: border-box;
   box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
-  transition: box-shadow 0.28s ease, border-color 0.28s ease;
+  transition: box-shadow var(--motion-med) var(--motion-ease), border-color var(--motion-med) var(--motion-ease);
   pointer-events: auto;
   color: #f8f5ff;
   display: flex;
@@ -2124,7 +2283,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease);
 }
 
 .stem-card-play:hover {
@@ -2147,7 +2306,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
   filter: drop-shadow(0 6px 12px rgba(255, 45, 178, 0.35));
   text-shadow: 0 0 12px rgba(255, 45, 178, 0.5);
 }
@@ -2191,7 +2350,7 @@ body {
   font: 700 14px "Inter", sans-serif;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: all 0.3s;
+  transition: all var(--motion-med) var(--motion-ease);
   position: relative;
   overflow: hidden;
   z-index: 1003;
@@ -2207,7 +2366,7 @@ body {
   inset: 0;
   background: linear-gradient(135deg, #8b5cf6, #d946ef);
   opacity: 0;
-  transition: opacity 0.3s;
+  transition: opacity var(--motion-med) var(--motion-ease);
   border-radius: 24px;
   z-index: -1;
 }
@@ -2220,10 +2379,6 @@ body {
 }
 
 .split-audio-btn:active { transform: translateY(0); }
-
-/* =========================
-   COMPACT MODE
-   ========================= */
 
 .dashboard.compact {
   border-radius: 36px;
@@ -2283,7 +2438,7 @@ body {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all var(--motion-fast) var(--motion-ease);
 }
 
 .dashboard.compact .compact-window-btn:hover {
@@ -2389,7 +2544,7 @@ body {
 
 .dashboard.compact .dash-controls {
   flex: none;
-  gap: 10px;
+  gap: 12px;
   margin-bottom: 12px;
 }
 
@@ -2407,7 +2562,11 @@ body {
 }
 
 .dashboard.compact .dash-select-wrapper {
-  --dropdown-open-space: 110px;
+  --dropdown-open-space: 0px;
+  margin-bottom: 8px;
+}
+
+.dashboard.compact .dash-select-row .dash-select-wrapper.dropdown-open {
   margin-bottom: 8px;
 }
 
@@ -2463,11 +2622,15 @@ body {
   bottom: auto;
   left: auto;
   right: auto;
-  margin-top: 18px;
+  margin-top: 140px;
   padding: 0;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px 12px;
+}
+
+.dashboard.compact.advanced .stem-list {
+  margin-top: 32px;
 }
 
 .dashboard.compact .stem-list::before {
@@ -2501,11 +2664,14 @@ body {
 }
 
 .dashboard.compact .split-audio-btn {
-  width: min(300px, 74%);
-  height: 38px;
+  width: fit-content;
+  max-width: 100%;
+  height: 36px;
+  padding: 0 22px;
   font-size: 11.5px;
-  letter-spacing: 0.5px;
-  margin: 10px auto 0;
+  letter-spacing: 0.4px;
+  margin: 12px auto 0;
+  align-self: center;
 }
 
 .dashboard.compact .waveform-wrapper {
@@ -2516,9 +2682,15 @@ body {
 }
 
 .dashboard.compact .waveform-scroll {
-  padding: 0 10px 6px;
-  background: rgba(12, 12, 24, 0.45);
+  padding: 0 18px 16px;
+  background: transparent;
   border-radius: 20px;
+  overflow-x: visible;
+  overflow-y: visible;
+}
+
+.dashboard.compact .waveform-scroll.scrollable {
+  overflow-x: auto;
 }
 
 .dashboard.compact .waveform-scrubber-row {
@@ -2570,7 +2742,8 @@ body {
 }
 
 .dashboard.compact .waveform-handle {
-  bottom: -26px;
+  bottom: 0;
+  gap: 6px;
 }
 
 .dashboard.compact .waveform-handle-bracket {
@@ -2601,11 +2774,6 @@ body {
   right: 20px;
 }
 
-.dashboard.compact .waveform-playhead-label {
-  top: -22px;
-  font-size: 11px;
-}
-
 .dashboard.compact .waveform-zoom-btn {
   width: 28px;
   height: 28px;
@@ -2614,10 +2782,12 @@ body {
 }
 
 .dashboard.compact .dash-transport {
-  width: 100%;
-  max-width: 260px;
-  margin: 10px auto 0;
-  gap: 10px;
+  width: fit-content;
+  max-width: none;
+  margin: 18px auto 0;
+  padding: 0 6px;
+  gap: 8px;
+  align-self: center;
 }
 
 .dashboard.compact .dash-transport::before {
@@ -2884,7 +3054,7 @@ body {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
-  transition: opacity 0.2s ease;
+  transition: opacity var(--motion-fast) var(--motion-ease);
 }
 
 .stem-action-pill.disabled {
@@ -2903,7 +3073,7 @@ body {
   color: #f3e8ff;
   cursor: pointer;
   border-radius: 50%;
-  transition: background 0.2s ease, color 0.2s ease;
+  transition: background var(--motion-fast) var(--motion-ease), color var(--motion-fast) var(--motion-ease);
 }
 
 .stem-pill-btn:hover {

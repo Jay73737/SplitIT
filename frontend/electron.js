@@ -300,6 +300,12 @@ function setCompactMode(enabled) {
   const shouldEnable = Boolean(enabled);
   if (shouldEnable === compactModeEnabled) return;
 
+  const notifyRenderer = () => {
+    if (mainWin && !mainWin.isDestroyed()) {
+      mainWin.webContents.send("window:compact-mode-changed", compactModeEnabled);
+    }
+  };
+
   if (shouldEnable) {
     mainWinBoundsBeforeCompact = mainWin.getBounds();
     const targetBounds = getCompactBounds();
@@ -308,13 +314,22 @@ function setCompactMode(enabled) {
       else mainWin.setAlwaysOnTop(true);
     } catch {}
     if (targetBounds) {
-      mainWin.setBounds(targetBounds, true);
+      mainWin.setBounds(targetBounds, false);
     }
   } else {
     if (mainWinBoundsBeforeCompact) {
-      mainWin.setBounds(mainWinBoundsBeforeCompact, true);
+      mainWin.setBounds(mainWinBoundsBeforeCompact, false);
+      const restoreBounds = { ...mainWinBoundsBeforeCompact };
+      setTimeout(() => {
+        if (!mainWin || mainWin.isDestroyed()) return;
+        mainWin.setBounds(restoreBounds, false);
+      }, 120);
     } else {
-      mainWin.setSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT, true);
+      mainWin.setSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT, false);
+      setTimeout(() => {
+        if (!mainWin || mainWin.isDestroyed()) return;
+        mainWin.setSize(MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT, false);
+      }, 120);
     }
     try {
       mainWin.setAlwaysOnTop(false);
@@ -323,6 +338,7 @@ function setCompactMode(enabled) {
   }
 
   compactModeEnabled = shouldEnable;
+  notifyRenderer();
 }
 
 function createMainWindow() {
@@ -832,9 +848,9 @@ ipcMain.handle("stems:download-all", async (_event, payload = {}) => {
   }
 });
 
-ipcMain.on("stems:drag-file", (event, payload = {}) => {
+ipcMain.on("stems:drag-file", async (event, payload = {}) => {
   try {
-    const { filePath, displayName } = payload;
+    const { filePath, displayName, dragRect } = payload;
     if (!filePath) {
       throw new Error("Missing file path");
     }
@@ -844,7 +860,30 @@ ipcMain.on("stems:drag-file", (event, payload = {}) => {
       throw new Error("Stem file does not exist");
     }
 
-    const icon = getAppDragIcon();
+    let icon = getAppDragIcon();
+    if (
+      dragRect &&
+      Number.isFinite(dragRect.width) &&
+      Number.isFinite(dragRect.height) &&
+      dragRect.width > 0 &&
+      dragRect.height > 0
+    ) {
+      try {
+        const captureRect = {
+          x: Math.max(0, Math.round(dragRect.x || 0)),
+          y: Math.max(0, Math.round(dragRect.y || 0)),
+          width: Math.round(dragRect.width),
+          height: Math.round(dragRect.height),
+        };
+        const captured = await event.sender.capturePage(captureRect);
+        if (captured && !captured.isEmpty()) {
+          icon = captured;
+        }
+      } catch (error) {
+        logMain("stems-drag-icon-error", { message: error.message });
+      }
+    }
+
     event.sender.startDrag({
       file: resolved,
       icon,

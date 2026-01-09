@@ -1,4 +1,6 @@
 import os
+import math
+import random
 import uuid
 import shutil
 import tempfile
@@ -17,6 +19,7 @@ from pydantic import BaseModel
 import yt_dlp  # pip install yt-dlp
 from demucs import pretrained
 from demucs.separate import apply_model, save_audio, load_track
+from demucs.apply import BagOfModels, TensorChunk
 import torch
 
 PROJECT_ROOT = Path(os.environ.get("SPLITME_APP_ROOT", Path(__file__).resolve().parents[1]))
@@ -49,6 +52,7 @@ MODEL_MAP = {
 split_jobs: Dict[str, Dict[str, Any]] = {}
 split_jobs_lock = threading.Lock()
 split_executor = ThreadPoolExecutor(max_workers=1)
+LOG_MAX_ENTRIES = 60
 
 app = FastAPI(title="SplitMe Audio API")
 
@@ -219,6 +223,22 @@ def _set_job_state(job_id: str, **updates: Any) -> None:
         job.update(updates)
 
 
+def _append_job_log(job_id: str, message: str) -> None:
+    with split_jobs_lock:
+        job = split_jobs.get(job_id)
+        if not job:
+            return
+        started_at = job.get("started_at")
+        if started_at is None:
+            started_at = time.time()
+            job["started_at"] = started_at
+        elapsed = time.time() - started_at
+        logs = job.setdefault("logs", [])
+        logs.append({"time": f"+{elapsed:.2f}s", "message": message})
+        if len(logs) > LOG_MAX_ENTRIES:
+            del logs[:-LOG_MAX_ENTRIES]
+
+
 def _run_split_job(
     job_id: str,
     audio_path: Path,
@@ -230,20 +250,30 @@ def _run_split_job(
     overlap: Optional[float],
     shifts: Optional[int],
 ) -> None:
-    _set_job_state(job_id, status="processing")
+    _set_job_state(job_id, status="processing", stage="loading_model")
+    _append_job_log(job_id, f"Loading model {model_key} ({model_alias})")
     try:
         # Load the pretrained model
         model = pretrained.get_model(model_key)
+        source_names = ", ".join(getattr(model, "sources", []) or [])
+        if source_names:
+            _append_job_log(job_id, f"Model ready: sources={source_names}")
 
         job_dir = STEMS_DIR / audio_path.stem / job_id
         job_dir.mkdir(parents=True, exist_ok=True)
 
         # Load the audio track
+        _set_job_state(job_id, stage="loading_audio")
+        _append_job_log(job_id, "Decoding audio track")
         wav = load_track(str(audio_path), model.audio_channels, model.samplerate)
 
         total_samples = wav.shape[-1]
         sample_rate = model.samplerate
         total_seconds = total_samples / sample_rate if sample_rate else 0
+        _append_job_log(
+            job_id,
+            f"Audio ready: {total_seconds:.2f}s @ {sample_rate}Hz",
+        )
 
         if start_seconds is not None or end_seconds is not None:
             start = 0.0 if start_seconds is None else float(start_seconds)
@@ -255,6 +285,7 @@ def _run_split_job(
             if end_idx <= start_idx:
                 raise ValueError("Invalid split range: start must be before end.")
             wav = wav[:, start_idx:end_idx]
+            _append_job_log(job_id, f"Using range {start:.2f}s-{end:.2f}s")
 
         # Apply the model
         ref = wav.mean(0)
@@ -263,6 +294,7 @@ def _run_split_job(
             "device": "cpu",
             "progress": False,
         }
+        overlap_value = None
         if overlap is not None:
             try:
                 overlap_value = float(overlap)
@@ -271,6 +303,10 @@ def _run_split_job(
             if overlap_value is not None:
                 overlap_value = max(0.0, min(0.99, overlap_value))
                 apply_kwargs["overlap"] = overlap_value
+        effective_overlap = (
+            overlap_value if overlap_value is not None else apply_kwargs.get("overlap", 0.25)
+        )
+        shifts_value = None
         if shifts is not None:
             try:
                 shifts_value = int(shifts)
@@ -279,10 +315,176 @@ def _run_split_job(
             if shifts_value is not None:
                 shifts_value = max(0, min(20, shifts_value))
                 apply_kwargs["shifts"] = shifts_value
+        effective_shifts = shifts_value if shifts_value is not None else 1
 
         allowed_args = set(inspect.signature(apply_model).parameters)
+        supports_callback = "callback" in allowed_args
         apply_kwargs = {k: v for k, v in apply_kwargs.items() if k in allowed_args}
-        sources = apply_model(model, wav[None], **apply_kwargs)[0]
+        if isinstance(model, BagOfModels):
+            segment_seconds = getattr(model, "max_allowed_segment", None)
+        else:
+            segment_seconds = getattr(model, "segment", None)
+        if segment_seconds is not None:
+            try:
+                segment_seconds = float(segment_seconds)
+            except (TypeError, ValueError):
+                segment_seconds = None
+        if not segment_seconds or segment_seconds <= 0:
+            segment_seconds = 8.0
+        segment_length = int(sample_rate * segment_seconds) if sample_rate else 0
+        if segment_length <= 0:
+            segment_length = max(1, wav.shape[-1])
+        stride = int((1 - effective_overlap) * segment_length) if segment_length else 0
+        if stride <= 0:
+            stride = max(1, segment_length)
+        offsets = list(range(0, wav.shape[-1], stride)) if stride else [0]
+        segments = max(1, len(offsets))
+        models_count = len(model.models) if isinstance(model, BagOfModels) else 1
+        shifts_count = max(1, int(effective_shifts))
+        segment_unit_weight = models_count
+        segment_units = segments * segment_unit_weight * shifts_count
+        total_units = segment_units + len(requested_stems)
+        progress_state = {"segments_done": 0, "saves_done": 0}
+        progress_lock = threading.Lock()
+
+        def _update_progress(stage: str, done_override: Optional[int] = None) -> None:
+            done = (
+                done_override
+                if done_override is not None
+                else progress_state["segments_done"] + progress_state["saves_done"]
+            )
+            progress = done / total_units if total_units else 0.0
+            _set_job_state(
+                job_id,
+                stage=stage,
+                progress=progress,
+                progress_done=done,
+                progress_total=total_units,
+            )
+
+        _update_progress("separating")
+        _append_job_log(
+            job_id,
+            f"Separating {segments} segments (shifts={shifts_count}, overlap={effective_overlap:.2f})",
+        )
+
+        seen_segments = set()
+
+        def progress_callback(info: Dict[str, Any]) -> None:
+            if info.get("state") != "end":
+                return
+            shift_idx = int(info.get("shift_idx", 0))
+            model_idx = int(info.get("model_idx_in_bag", 0))
+            segment_offset = int(info.get("segment_offset", 0))
+            key = (model_idx, shift_idx, segment_offset)
+            with progress_lock:
+                if key in seen_segments:
+                    return
+                seen_segments.add(key)
+                progress_state["segments_done"] = len(seen_segments)
+                done = progress_state["segments_done"] + progress_state["saves_done"]
+            segment_index = segment_offset // stride + 1 if stride else progress_state["segments_done"]
+            if segment_index > segments:
+                segment_index = segments
+            message = f"Segment {segment_index}/{segments}"
+            if shifts_count > 1:
+                message += f" (shift {shift_idx + 1}/{shifts_count})"
+            if models_count > 1:
+                message += f" model {model_idx + 1}/{models_count}"
+            _append_job_log(job_id, message)
+            _update_progress("separating", done)
+
+        if supports_callback:
+            sources = apply_model(
+                model,
+                wav[None],
+                **apply_kwargs,
+                callback=progress_callback,
+                callback_arg={"job_id": job_id},
+            )[0]
+        else:
+            _append_job_log(
+                job_id,
+                "Demucs build lacks progress callbacks; using segment-level updates.",
+            )
+            manual_kwargs = dict(apply_kwargs)
+            if "split" in allowed_args:
+                manual_kwargs["split"] = False
+            if "progress" in allowed_args:
+                manual_kwargs["progress"] = False
+            if "shifts" in allowed_args:
+                manual_kwargs["shifts"] = 0
+            if "segment" in allowed_args:
+                manual_kwargs["segment"] = segment_seconds
+            mix = wav[None]
+            batch, channels, length = mix.shape
+            weight = torch.cat(
+                [
+                    torch.arange(1, segment_length // 2 + 1, device=mix.device),
+                    torch.arange(segment_length - segment_length // 2, 0, -1, device=mix.device),
+                ]
+            )
+            weight = (weight / weight.max()) ** 1.0
+
+            def run_segmented(
+                mix_chunk,
+                segments_total: int,
+                shift_idx: Optional[int] = None,
+            ) -> torch.Tensor:
+                base_chunk = mix_chunk if isinstance(mix_chunk, TensorChunk) else TensorChunk(mix_chunk)
+                total_len = base_chunk.length
+                local_offsets = list(range(0, total_len, stride)) if stride else [0]
+                out = torch.zeros(
+                    batch, len(model.sources), channels, total_len, device=mix.device
+                )
+                sum_weight = torch.zeros(total_len, device=mix.device)
+                for seg_idx, offset in enumerate(local_offsets):
+                    chunk = TensorChunk(base_chunk, offset, segment_length)
+                    chunk_out = apply_model(model, chunk, **manual_kwargs)
+                    chunk_length = chunk_out.shape[-1]
+                    out[..., offset:offset + segment_length] += (
+                        weight[:chunk_length] * chunk_out
+                    ).to(mix.device)
+                    sum_weight[offset:offset + segment_length] += weight[:chunk_length].to(
+                        mix.device
+                    )
+                    with progress_lock:
+                        progress_state["segments_done"] += segment_unit_weight
+                        done = progress_state["segments_done"] + progress_state["saves_done"]
+                    message = f"Segment {seg_idx + 1}/{segments_total}"
+                    if shift_idx is not None and shifts_count > 1:
+                        message += f" (shift {shift_idx + 1}/{shifts_count})"
+                    _append_job_log(job_id, message)
+                    _update_progress("separating", done)
+                out /= sum_weight
+                return out
+
+            if shifts_count > 1:
+                max_shift = int(0.5 * sample_rate)
+                mix_chunk = TensorChunk(mix)
+                padded_mix = mix_chunk.padded(length + 2 * max_shift)
+                shift_offsets = [random.randint(0, max_shift) for _ in range(shifts_count)]
+                shift_lengths = [length + max_shift - offset for offset in shift_offsets]
+                shift_segments = [
+                    max(1, math.ceil(shift_length / stride)) for shift_length in shift_lengths
+                ]
+                total_units = (
+                    sum(shift_segments) * segment_unit_weight + len(requested_stems)
+                )
+                out = torch.zeros(
+                    batch, len(model.sources), channels, length, device=mix.device
+                )
+                for shift_idx, offset in enumerate(shift_offsets):
+                    shifted = TensorChunk(padded_mix, offset, length + max_shift - offset)
+                    shift_out = run_segmented(shifted, shift_segments[shift_idx], shift_idx)
+                    out += shift_out[..., max_shift - offset:]
+                out /= shifts_count
+                sources = out[0]
+            else:
+                segments_total = max(1, math.ceil(length / stride)) if stride else 1
+                sources = run_segmented(mix, segments_total)[0]
+        _append_job_log(job_id, "Stitching segments + overlap blend")
+        _update_progress("saving")
 
         # Get the sample rate from the model
         sample_rate = model.samplerate
@@ -305,6 +507,7 @@ def _run_split_job(
             output_path = job_dir / f"{stem_name}.mp3"
 
             # Persist stems as mp3 to dramatically reduce size while keeping quality reasonable
+            _append_job_log(job_id, f"Saving stem {stem_name}")
             save_audio(
                 sources[i],
                 str(output_path),
@@ -313,6 +516,10 @@ def _run_split_job(
                 preset=4,
                 clip="rescale",
             )
+            with progress_lock:
+                progress_state["saves_done"] += 1
+                done = progress_state["segments_done"] + progress_state["saves_done"]
+            _update_progress("saving", done)
 
             duration_seconds = float(sources[i].shape[-1] / sample_rate)
             results.append(
@@ -336,9 +543,15 @@ def _run_split_job(
             output_dir=str(job_dir),
             model=model_alias,
             model_key=model_key,
+            stage="completed",
+            progress=1.0,
+            progress_done=total_units,
+            progress_total=total_units,
         )
+        _append_job_log(job_id, "Split completed")
     except Exception as exc:  # noqa: BLE001
-        _set_job_state(job_id, status="error", error=str(exc))
+        _set_job_state(job_id, status="error", error=str(exc), stage="error")
+        _append_job_log(job_id, f"Error: {exc}")
 
 
 def _submit_split_job(
@@ -361,6 +574,7 @@ def _submit_split_job(
     with split_jobs_lock:
         split_jobs[job_id] = {
             "status": "queued",
+            "stage": "queued",
             "audio_id": audio_path.stem,
             "audio_path": str(audio_path),
             "requested_stems": requested_stems,
@@ -370,7 +584,14 @@ def _submit_split_job(
             "end_seconds": end_seconds,
             "overlap": overlap,
             "shifts": shifts,
+            "progress": 0.0,
+            "progress_done": 0,
+            "progress_total": 0,
+            "logs": [],
+            "started_at": time.time(),
         }
+
+    _append_job_log(job_id, "Queued split job")
 
     split_executor.submit(
         _run_split_job,
@@ -458,6 +679,11 @@ def split_audio_status(job_id: str):
         "model": job.get("model"),
         "startSeconds": job.get("start_seconds"),
         "endSeconds": job.get("end_seconds"),
+        "stage": job.get("stage"),
+        "progress": job.get("progress"),
+        "progressDone": job.get("progress_done"),
+        "progressTotal": job.get("progress_total"),
+        "logs": list(job.get("logs", [])),
     }
 
     status = response["status"]

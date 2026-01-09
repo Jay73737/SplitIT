@@ -257,7 +257,7 @@ export default function Waveform({
           width: "100%",
           height: "300px",  // Match the WaveSurfer height
           opacity: isLoading ? 0.5 : 1,
-          transition: "opacity 0.3s ease",
+          transition: "opacity 0.35s cubic-bezier(0.22, 1, 0.36, 1)",
           backgroundColor: "transparent",
           cursor: "pointer",
           position: "relative",

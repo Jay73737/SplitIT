@@ -12,7 +12,7 @@
 dist/
 frontend/dist/
 data/
-release/
+release/WWD
 build/
 frontend/build/
 frontend/node_modules/

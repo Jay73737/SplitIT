@@ -18,6 +18,11 @@ contextBridge.exposeInMainWorld("electronAPI", {
   resultsClosed: () => ipcRenderer.send("results-closed"),
   setCompactMode: (enabled) =>
     ipcRenderer.send("window:set-compact-mode", Boolean(enabled)),
+  onCompactModeChanged: (fn) => {
+    const handler = (_event, enabled) => fn(Boolean(enabled));
+    ipcRenderer.on("window:compact-mode-changed", handler);
+    return () => ipcRenderer.removeListener("window:compact-mode-changed", handler);
+  },
   minimizeWindow: () => ipcRenderer.send("window:minimize"),
   quitApp: () => ipcRenderer.send("window:quit"),
   downloadStems: (payload) => ipcRenderer.invoke("stems:download-all", payload),

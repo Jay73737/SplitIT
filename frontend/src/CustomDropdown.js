@@ -43,15 +43,15 @@ const CustomDropdown = ({
 
   const springConfig = {
     type: "spring",
-    stiffness: 400,
-    damping: 28,
-    mass: 0.8,
+    stiffness: 260,
+    damping: 24,
+    mass: 0.9,
   };
 
   const chevronSpring = {
     type: "spring",
-    stiffness: 300,
-    damping: 25,
+    stiffness: 220,
+    damping: 20,
   };
 
   return (

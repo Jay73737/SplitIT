@@ -39,7 +39,7 @@ export default function StemCardStack({
   expanded = false,
 }) {
   const layoutTransition = {
-    duration: 1.15,
+    duration: 0.9,
     ease: [0.22, 1, 0.36, 1],
     type: "tween",
   };
@@ -230,6 +230,37 @@ export default function StemCardStack({
     if (event?.dataTransfer) {
       event.dataTransfer.effectAllowed = "copy";
       const safeTitle = ((stem.title || stem.stem || "Stem").toString()).replace(/[\\/:*?"<>|]+/g, "-");
+      try {
+        event.dataTransfer.setData("text/plain", safeTitle);
+      } catch (_) {
+        /* ignore */
+      }
+      const dragTarget = event.currentTarget;
+      if (dragTarget instanceof HTMLElement) {
+        const rect = dragTarget.getBoundingClientRect();
+        const clone = dragTarget.cloneNode(true);
+        if (clone instanceof HTMLElement) {
+          clone.style.width = `${rect.width}px`;
+          clone.style.height = `${rect.height}px`;
+          clone.style.position = "fixed";
+          clone.style.top = "-1000px";
+          clone.style.left = "-1000px";
+          clone.style.margin = "0";
+          clone.style.transform = "none";
+          clone.style.pointerEvents = "none";
+          clone.style.opacity = "0.95";
+          clone.style.zIndex = "9999";
+          document.body.appendChild(clone);
+          event.dataTransfer.setDragImage(
+            clone,
+            Math.round(rect.width / 2),
+            Math.round(rect.height / 2)
+          );
+          setTimeout(() => {
+            clone.remove();
+          }, 0);
+        }
+      }
       if (stem.streamUrl) {
         try {
           event.dataTransfer.setData("text/uri-list", stem.streamUrl);
@@ -247,9 +278,24 @@ export default function StemCardStack({
     }
 
     if (window?.electronAPI?.dragStem && stem.filePath) {
+      const dragTarget = event.currentTarget;
+      let dragRect = null;
+      if (dragTarget instanceof HTMLElement) {
+        const rect = dragTarget.getBoundingClientRect();
+        if (rect.width && rect.height) {
+          dragRect = {
+            x: Math.round(rect.left + window.scrollX),
+            y: Math.round(rect.top + window.scrollY),
+            width: Math.round(rect.width),
+            height: Math.round(rect.height),
+          };
+        }
+      }
       window.electronAPI.dragStem({
         filePath: stem.filePath,
         displayName: `${stem.title || stem.stem || "Stem"}.${(stem.format || "mp3").toLowerCase()}`,
+        dragRect,
+        pixelRatio: typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1,
       });
     }
   }, []);
@@ -322,7 +368,8 @@ export default function StemCardStack({
                     layout: { ...layoutTransition, delay },
                     scale: { ...layoutTransition, delay },
                     opacity: {
-                      duration: 0.2,
+                      duration: 0.3,
+                      ease: [0.22, 1, 0.36, 1],
                       delay,
                     },
                   }}
@@ -397,7 +444,8 @@ export default function StemCardStack({
                         transition={{
                           layout: { ...layoutTransition, delay },
                           opacity: {
-                            duration: 0.4,
+                            duration: 0.45,
+                            ease: [0.22, 1, 0.36, 1],
                             delay,
                           },
                         }}

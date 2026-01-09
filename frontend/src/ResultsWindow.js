@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import VideoCard from "./VideoCard";
 import "./App.css";
 
-const spring = { type: "spring", stiffness: 260, damping: 22, mass: 0.8 };
+const spring = { type: "spring", stiffness: 220, damping: 24, mass: 0.9 };
 
 export default function ResultsWindow({ results, onSelect }) {
   if (!results?.length) return null;
@@ -20,7 +20,7 @@ export default function ResultsWindow({ results, onSelect }) {
         className="results-grid"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.25 }}
+        transition={{ delay: 0.18, duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         style={{ WebkitAppRegion: "no-drag" }}
       >
         {results.map((video) => (
