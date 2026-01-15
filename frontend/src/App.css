@@ -874,22 +874,19 @@ body {
   color: #fff;
 }
 
-.dash-close-pill:hover,
-.dash-close-pill:focus-within {
-  width: 112px;
-  padding-left: 4px;
+.dash-close-pill:hover {
+  width: 108px;
+  padding-left: 0;
   background: rgba(255, 255, 255, 0.15);
 }
 
-.dash-close-pill:hover .dash-close-action,
-.dash-close-pill:focus-within .dash-close-action {
+.dash-close-pill:hover .dash-close-action {
   opacity: 1;
   transform: translateX(0);
   pointer-events: auto;
 }
 
-.dash-close-pill:hover .dash-close,
-.dash-close-pill:focus-within .dash-close {
+.dash-close-pill:hover .dash-close {
   color: #fff;
 }
 

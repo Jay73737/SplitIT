@@ -2638,3 +2638,129 @@
 [0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
 [0] 
 [0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/DashboardView.js
+[0]   Line 1031:6:  React Hook useCallback has a missing dependency: 'audioFormat'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+[0] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/DashboardView.js
+[0]   Line 1031:6:  React Hook useCallback has a missing dependency: 'audioFormat'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+[0] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning

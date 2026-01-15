@@ -20,6 +20,16 @@ export const STEM_LABELS = {
   other: "Other Stem Split",
 };
 
+const MIME_TYPES = {
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  flac: "audio/flac",
+  aiff: "audio/aiff",
+  aif: "audio/aiff",
+  m4a: "audio/mp4",
+  opus: "audio/ogg",
+};
+
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const formatTime = (seconds = 0) => {
@@ -270,7 +280,8 @@ export default function StemCardStack({
         const format = (stem.format || "mp3").toLowerCase();
         const downloadName = `${safeTitle}.${format}`;
         try {
-          event.dataTransfer.setData("DownloadURL", `audio/${format}:${downloadName}:${stem.streamUrl}`);
+          const mime = MIME_TYPES[format] || `audio/${format}`;
+          event.dataTransfer.setData("DownloadURL", `${mime}:${downloadName}:${stem.streamUrl}`);
         } catch (_) {
           /* ignore */
         }
