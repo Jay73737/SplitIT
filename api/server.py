@@ -21,6 +21,9 @@ import yt_dlp  # pip install yt-dlp
 from demucs import pretrained
 from demucs.separate import apply_model, save_audio, load_track
 from demucs.apply import BagOfModels, TensorChunk
+
+os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
+
 import torch
 
 PROJECT_ROOT = Path(os.environ.get("SPLITME_APP_ROOT", Path(__file__).resolve().parents[1]))
@@ -137,6 +140,33 @@ def _is_broken_pipe_error(exc: Exception) -> bool:
         return True
     message = str(exc).lower()
     return "broken pipe" in message or "epipe" in message
+
+
+def _select_torch_device() -> str:
+    preferred = (os.environ.get("SPLITME_TORCH_DEVICE") or "").strip().lower()
+    has_mps = getattr(torch.backends, "mps", None)
+    mps_available = bool(has_mps and torch.backends.mps.is_available())
+
+    if preferred:
+        if preferred == "mps":
+            if mps_available:
+                return "mps"
+            logger.warning("SPLITME_TORCH_DEVICE=mps set but MPS is unavailable; falling back to CPU.")
+            return "cpu"
+        if preferred == "cuda":
+            if torch.cuda.is_available():
+                return "cuda"
+            logger.warning("SPLITME_TORCH_DEVICE=cuda set but CUDA is unavailable; falling back to CPU.")
+            return "cpu"
+        if preferred == "cpu":
+            return "cpu"
+        logger.warning("Unsupported SPLITME_TORCH_DEVICE '%s'; falling back to auto.", preferred)
+
+    if mps_available:
+        return "mps"
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
 
 
 def _normalize_output_format(fmt: Optional[str]) -> str:
@@ -347,11 +377,16 @@ def _run_split_job(
             wav = wav[:, start_idx:end_idx]
             _append_job_log(job_id, f"Using range {start:.2f}s-{end:.2f}s")
 
+        device = _select_torch_device()
+        _append_job_log(job_id, f"Using torch device: {device.upper()}")
+        if device != "cpu":
+            wav = wav.to(device)
+
         # Apply the model
         ref = wav.mean(0)
         wav = (wav - ref.mean()) / ref.std()
         apply_kwargs = {
-            "device": "cpu",
+            "device": device,
             "progress": False,
         }
         overlap_value = None
@@ -556,6 +591,9 @@ def _run_split_job(
         }
 
         stem_names = stem_mapping.get(model_key, ['drums', 'bass', 'other', 'vocals'])
+
+        if isinstance(sources, torch.Tensor) and sources.device.type != "cpu":
+            sources = sources.to("cpu")
 
         results = []
         for i, stem_name in enumerate(stem_names):
@@ -779,7 +817,7 @@ def split_audio_status(job_id: str):
 
 
 @app.get("/api/split-audio/{job_id}/stems/{stem_name}")
-def get_split_stem(job_id: str, stem_name: str):
+def get_split_stem(job_id: str, stem_name: str, format: Optional[str] = None):
     job = split_jobs.get(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Split job not found")
@@ -796,6 +834,16 @@ def get_split_stem(job_id: str, stem_name: str):
             path = Path(path_str)
             if not path.exists():
                 raise HTTPException(status_code=404, detail="Stem file not found")
+            if format:
+                desired = _normalize_output_format(format)
+                current = path.suffix.lstrip(".").lower()
+                if desired != current:
+                    export_path = path.with_name(
+                        f"{path.stem}__{desired}{SUPPORTED_STEM_FORMATS[desired]}"
+                    )
+                    if not export_path.exists():
+                        _convert_audio_with_ffmpeg(path, export_path, desired)
+                    path = export_path
             return FileResponse(
                 path=str(path),
                 media_type=_mime_type_for_suffix(path.suffix),

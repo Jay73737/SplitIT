@@ -30,6 +30,21 @@ const MIME_TYPES = {
   opus: "audio/ogg",
 };
 
+const appendStemFormat = (streamUrl, format) => {
+  if (!streamUrl || !format) return streamUrl;
+  if (streamUrl.startsWith("blob:") || streamUrl.startsWith("data:")) {
+    return streamUrl;
+  }
+  try {
+    const url = new URL(streamUrl);
+    url.searchParams.set("format", format);
+    return url.toString();
+  } catch (err) {
+    const joiner = streamUrl.includes("?") ? "&" : "?";
+    return `${streamUrl}${joiner}format=${encodeURIComponent(format)}`;
+  }
+};
+
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const formatTime = (seconds = 0) => {
@@ -45,6 +60,8 @@ export default function StemCardStack({
   artist = "",
   onDownloadAll,
   onToggleExpand,
+  exportFormat,
+  allowExpand = true,
   downloading = false,
   expanded = false,
 }) {
@@ -237,9 +254,18 @@ export default function StemCardStack({
   const handleDragStart = useCallback((event, stem) => {
     if (!stem) return;
     event.stopPropagation?.();
+    const safeTitle = ((stem.title || stem.stem || "Stem").toString()).replace(
+      /[\\/:*?"<>|]+/g,
+      "-"
+    );
+    const resolvedFormat = String(exportFormat || stem.format || "mp3")
+      .trim()
+      .toLowerCase();
+    const exportStreamUrl = stem.streamUrl
+      ? appendStemFormat(stem.streamUrl, resolvedFormat)
+      : null;
     if (event?.dataTransfer) {
       event.dataTransfer.effectAllowed = "copy";
-      const safeTitle = ((stem.title || stem.stem || "Stem").toString()).replace(/[\\/:*?"<>|]+/g, "-");
       try {
         event.dataTransfer.setData("text/plain", safeTitle);
       } catch (_) {
@@ -271,24 +297,26 @@ export default function StemCardStack({
           }, 0);
         }
       }
-      if (stem.streamUrl) {
+      if (exportStreamUrl) {
         try {
-          event.dataTransfer.setData("text/uri-list", stem.streamUrl);
+          event.dataTransfer.setData("text/uri-list", exportStreamUrl);
         } catch (_) {
           /* ignore */
         }
-        const format = (stem.format || "mp3").toLowerCase();
-        const downloadName = `${safeTitle}.${format}`;
+        const downloadName = `${safeTitle}.${resolvedFormat}`;
         try {
-          const mime = MIME_TYPES[format] || `audio/${format}`;
-          event.dataTransfer.setData("DownloadURL", `${mime}:${downloadName}:${stem.streamUrl}`);
+          const mime = MIME_TYPES[resolvedFormat] || `audio/${resolvedFormat}`;
+          event.dataTransfer.setData(
+            "DownloadURL",
+            `${mime}:${downloadName}:${exportStreamUrl}`
+          );
         } catch (_) {
           /* ignore */
         }
       }
     }
 
-    if (window?.electronAPI?.dragStem && stem.filePath) {
+    if (window?.electronAPI?.dragStem && (stem.filePath || exportStreamUrl)) {
       const dragTarget = event.currentTarget;
       let dragRect = null;
       if (dragTarget instanceof HTMLElement) {
@@ -302,14 +330,20 @@ export default function StemCardStack({
           };
         }
       }
+      const originalFormat = String(stem.format || "mp3").trim().toLowerCase();
+      const useExistingFile = Boolean(stem.filePath && originalFormat === resolvedFormat);
+      const dragName = `${safeTitle}.${resolvedFormat}`;
       window.electronAPI.dragStem({
-        filePath: stem.filePath,
-        displayName: `${stem.title || stem.stem || "Stem"}.${(stem.format || "mp3").toLowerCase()}`,
+        filePath: useExistingFile ? stem.filePath : undefined,
+        streamUrl: useExistingFile ? undefined : exportStreamUrl,
+        format: resolvedFormat,
+        fileName: dragName,
+        displayName: dragName,
         dragRect,
         pixelRatio: typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1,
       });
     }
-  }, []);
+  }, [exportFormat]);
 
   const gridRows = useMemo(() => {
     if (!expanded) return [];
@@ -502,7 +536,11 @@ export default function StemCardStack({
           <div className="stem-stack-instructions">Use ↑↓ keys or scroll to navigate</div>
         )}
         <div className={`stem-stack-actions${expanded ? " expanded" : ""}`}>
-          <div className={`stem-action-pill${downloading ? " disabled" : ""}`}>
+          <div
+            className={`stem-action-pill${downloading ? " disabled" : ""}${
+              allowExpand ? "" : " single"
+            }`}
+          >
             <button
               type="button"
               className="stem-pill-btn"
@@ -526,48 +564,52 @@ export default function StemCardStack({
                 <path d="M5 21h14" />
               </svg>
             </button>
-            <span className="stem-pill-divider" aria-hidden="true" />
-            <button
-              type="button"
-              className="stem-pill-btn"
-              onClick={() => onToggleExpand?.()}
-              aria-label={expanded ? "Collapse stem view" : "Expand stem view"}
-              title={expanded ? "Collapse stem view" : "Expand stem view"}
-            >
-              {expanded ? (
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+            {allowExpand && (
+              <>
+                <span className="stem-pill-divider" aria-hidden="true" />
+                <button
+                  type="button"
+                  className="stem-pill-btn"
+                  onClick={() => onToggleExpand?.()}
+                  aria-label={expanded ? "Collapse stem view" : "Expand stem view"}
+                  title={expanded ? "Collapse stem view" : "Expand stem view"}
                 >
-                  <polyline points="9 3 3 3 3 9" />
-                  <polyline points="15 21 21 21 21 15" />
-                  <line x1="3" y1="9" x2="10" y2="16" />
-                  <line x1="21" y1="15" x2="14" y2="8" />
-                </svg>
-              ) : (
-                <svg
-                  width="18"
-                  height="18"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <polyline points="15 3 21 3 21 9" />
-                  <polyline points="9 21 3 21 3 15" />
-                  <line x1="21" y1="3" x2="14" y2="10" />
-                  <line x1="3" y1="21" x2="10" y2="14" />
-                </svg>
-              )}
-            </button>
+                  {expanded ? (
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="9 3 3 3 3 9" />
+                      <polyline points="15 21 21 21 21 15" />
+                      <line x1="3" y1="9" x2="10" y2="16" />
+                      <line x1="21" y1="15" x2="14" y2="8" />
+                    </svg>
+                  ) : (
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <polyline points="15 3 21 3 21 9" />
+                      <polyline points="9 21 3 21 3 15" />
+                      <line x1="21" y1="3" x2="14" y2="10" />
+                      <line x1="3" y1="21" x2="10" y2="14" />
+                    </svg>
+                  )}
+                </button>
+              </>
+            )}
           </div>
           {downloading && <span className="stem-pill-status">Preparing downloads…</span>}
         </div>

@@ -1119,6 +1119,35 @@ export default function DashboardView({ video, onBack }) {
     }
   }, [showStemStack]);
 
+  useEffect(() => {
+    if (compactMode) {
+      setExpandedStems(false);
+    }
+  }, [compactMode]);
+
+  const resolveExportFormat = useCallback(
+    (stemFormat) => {
+      const raw = audioFormat || stemFormat || "mp3";
+      return String(raw).trim().toLowerCase();
+    },
+    [audioFormat]
+  );
+
+  const buildStemStreamUrl = useCallback((streamUrl, format) => {
+    if (!streamUrl || !format) return streamUrl;
+    if (streamUrl.startsWith("blob:") || streamUrl.startsWith("data:")) {
+      return streamUrl;
+    }
+    try {
+      const url = new URL(streamUrl);
+      url.searchParams.set("format", format);
+      return url.toString();
+    } catch (err) {
+      const joiner = streamUrl.includes("?") ? "&" : "?";
+      return `${streamUrl}${joiner}format=${encodeURIComponent(format)}`;
+    }
+  }, []);
+
   const handleDownloadAll = useCallback(async () => {
     if (!splitResults.length || downloadingAll) return;
     setDownloadingAll(true);
@@ -1127,11 +1156,14 @@ export default function DashboardView({ video, onBack }) {
       const payload = {
         title: video?.title || "SplitMe Stems",
         targetDir: saveFolderPath || undefined,
-        stems: splitResults.map((stem) => ({
-          stem: stem.stem,
-          streamUrl: stem.streamUrl,
-          format: stem.format || "mp3",
-        })),
+        stems: splitResults.map((stem) => {
+          const exportFormat = resolveExportFormat(stem.format);
+          return {
+            stem: stem.stem,
+            streamUrl: buildStemStreamUrl(stem.streamUrl, exportFormat),
+            format: exportFormat,
+          };
+        }),
       };
 
       if (electronAPI?.downloadStems) {
@@ -1164,7 +1196,15 @@ export default function DashboardView({ video, onBack }) {
     } finally {
       setDownloadingAll(false);
     }
-  }, [downloadingAll, electronAPI, saveFolderPath, splitResults, video?.title]);
+  }, [
+    downloadingAll,
+    electronAPI,
+    saveFolderPath,
+    splitResults,
+    video?.title,
+    buildStemStreamUrl,
+    resolveExportFormat,
+  ]);
 
   const handleToggleExpanded = useCallback(() => {
     setExpandedStems((prev) => !prev);
@@ -1906,7 +1946,7 @@ export default function DashboardView({ video, onBack }) {
         <div
           className={`dash-waveform-container${
             showAdvancedConsole ? " has-advanced-console" : ""
-          }`}
+          }${showStemStack ? " stems" : ""}`}
           ref={waveformContainerRef}
         >
           {/* New backend-powered accurate waveform */}
@@ -1934,6 +1974,8 @@ export default function DashboardView({ video, onBack }) {
                 onToggleExpand={handleToggleExpanded}
                 expanded={expandedStems}
                 downloading={downloadingAll}
+                exportFormat={audioFormat}
+                allowExpand={!compactMode}
               />
             )}
 

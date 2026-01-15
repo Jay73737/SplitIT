@@ -1307,6 +1307,8 @@ body {
   max-height: 140px;
   overflow-y: auto;
   overflow-x: hidden;     /* remove bottom scrollbar */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   margin-top: 6px;
   box-sizing: border-box;
   transform-origin: top center;
@@ -1357,18 +1359,9 @@ body {
   font-weight: 700;
 }
 
-/* keep only a slim vertical scrollbar if needed */
-.dash-dropdown::-webkit-scrollbar { width: 4px; height: 0; }
-.dash-dropdown::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-}
-.dash-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.18);
-  border-radius: 3px;
-}
-.dash-dropdown::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.28);
+.dash-dropdown::-webkit-scrollbar {
+  width: 0;
+  height: 0;
 }
 
 .dash-select {
@@ -2575,6 +2568,10 @@ body {
   overflow: hidden;
 }
 
+.dashboard.compact .dash-waveform-container.stems {
+  justify-content: center;
+}
+
 .dashboard.compact .dash-sidebar {
   order: 2;
   width: 100%;
@@ -2800,7 +2797,10 @@ body {
 
 .dashboard.compact .waveform-wrapper.stems {
   max-width: 100%;
-  margin: 8px 0 12px;
+  flex: 0 0 auto;
+  margin: auto 0;
+  padding: 12px 22px;
+  justify-content: center;
 }
 
 .dashboard.compact .waveform-selection {
@@ -2954,6 +2954,10 @@ body {
 
 .dashboard.compact .stem-action-pill {
   padding: 3px;
+}
+
+.dashboard.compact .stem-action-pill.single {
+  padding: 4px;
 }
 
 .dashboard.compact .stem-pill-btn {
@@ -3123,6 +3127,10 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
   transition: opacity var(--motion-fast) var(--motion-ease);
+}
+
+.stem-action-pill.single {
+  padding: 5px;
 }
 
 .stem-action-pill.disabled {

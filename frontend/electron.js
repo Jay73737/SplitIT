@@ -35,6 +35,28 @@ function sanitizeFileName(name, fallback = "SplitMe Stems") {
   return safe.length ? safe : fallback;
 }
 
+async function fetchStemToTemp(streamUrl, format, fileName, displayName) {
+  if (!streamUrl) {
+    throw new Error("Missing stem stream URL");
+  }
+  const tempRoot = path.join(app.getPath("temp"), "splitme-stems");
+  await fs.promises.mkdir(tempRoot, { recursive: true });
+  const rawName = fileName || displayName || "Stem";
+  const safeName = sanitizeFileName(rawName, "Stem");
+  const baseName = safeName.replace(/\.[^/.]+$/, "") || "stem";
+  const extFromName = path.extname(safeName).replace(".", "");
+  const safeFormat = sanitizeFileName(format || extFromName || "mp3", "mp3").toLowerCase();
+  const finalName = `${baseName}.${safeFormat}`;
+  const targetPath = path.join(tempRoot, finalName);
+  const response = await fetch(streamUrl);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch stem: ${response.statusText || response.status}`);
+  }
+  const buffer = await response.buffer();
+  await fs.promises.writeFile(targetPath, buffer);
+  return targetPath;
+}
+
 function getAppDragIcon() {
   try {
     const iconPath = path.join(app.getAppPath(), "buildResources", "icon.png");
@@ -876,14 +898,19 @@ ipcMain.handle("stems:download-all", async (_event, payload = {}) => {
 
 ipcMain.on("stems:drag-file", async (event, payload = {}) => {
   try {
-    const { filePath, displayName, dragRect } = payload;
-    if (!filePath) {
-      throw new Error("Missing file path");
+    const { filePath, streamUrl, format, displayName, fileName, dragRect } = payload;
+    let resolved = null;
+    if (filePath) {
+      const candidate = path.resolve(filePath);
+      if (fs.existsSync(candidate)) {
+        resolved = candidate;
+      }
     }
-
-    const resolved = path.resolve(filePath);
-    if (!fs.existsSync(resolved)) {
-      throw new Error("Stem file does not exist");
+    if (!resolved && streamUrl) {
+      resolved = await fetchStemToTemp(streamUrl, format, fileName, displayName);
+    }
+    if (!resolved) {
+      throw new Error("Missing stem source");
     }
 
     let icon = getAppDragIcon();
@@ -910,10 +937,16 @@ ipcMain.on("stems:drag-file", async (event, payload = {}) => {
       }
     }
 
+    const dragTitle =
+      typeof displayName === "string"
+        ? displayName
+        : typeof fileName === "string"
+          ? fileName
+          : undefined;
     event.sender.startDrag({
       file: resolved,
       icon,
-      title: typeof displayName === "string" ? displayName : undefined,
+      title: dragTitle,
     });
     logMain("stems-drag", { path: resolved });
   } catch (error) {
