@@ -8,6 +8,7 @@ import threading
 import time
 import logging
 import inspect
+import subprocess
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Optional, List, Dict, Any
@@ -42,6 +43,25 @@ SUPPORTED_FORMATS = {
     "mp3": ".mp3",
     "opus": ".opus",
     "wav": ".wav",
+    "m4a": ".m4a",
+}
+
+SUPPORTED_STEM_FORMATS = {
+    "mp3": ".mp3",
+    "wav": ".wav",
+    "flac": ".flac",
+    "aiff": ".aiff",
+    "m4a": ".m4a",
+}
+
+MIME_TYPES = {
+    ".mp3": "audio/mpeg",
+    ".opus": "audio/ogg",
+    ".wav": "audio/wav",
+    ".flac": "audio/flac",
+    ".aiff": "audio/aiff",
+    ".aif": "audio/aiff",
+    ".m4a": "audio/mp4",
 }
 
 MODEL_MAP = {
@@ -68,13 +88,14 @@ app.add_middleware(
 
 class DownloadReq(BaseModel):
     sourceUrl: str
-    format: Optional[str] = "mp3"  # "mp3" | "opus" | "wav"
+    format: Optional[str] = "mp3"  # "mp3" | "opus" | "wav" | "m4a"
 
 
 class SplitAudioReq(BaseModel):
     audioId: str
     stems: List[str]
     model: Optional[str] = "ht-demucs-v4"
+    format: Optional[str] = "mp3"
     startSeconds: Optional[float] = None
     endSeconds: Optional[float] = None
     overlap: Optional[float] = None
@@ -116,6 +137,40 @@ def _is_broken_pipe_error(exc: Exception) -> bool:
         return True
     message = str(exc).lower()
     return "broken pipe" in message or "epipe" in message
+
+
+def _normalize_output_format(fmt: Optional[str]) -> str:
+    normalized = (fmt or "mp3").strip().lower()
+    if normalized in ("aif", "aiff"):
+        normalized = "aiff"
+    if normalized not in SUPPORTED_STEM_FORMATS:
+        raise ValueError(f"Unsupported stem format '{normalized}'.")
+    return normalized
+
+
+def _mime_type_for_suffix(suffix: str) -> str:
+    return MIME_TYPES.get((suffix or "").lower(), "application/octet-stream")
+
+
+def _convert_audio_with_ffmpeg(src_path: Path, dest_path: Path, fmt: str) -> None:
+    ffmpeg = shutil.which("ffmpeg")
+    if not ffmpeg:
+        raise RuntimeError("FFmpeg is required to export this audio format.")
+    cmd = [ffmpeg, "-y", "-i", str(src_path)]
+    if fmt == "m4a":
+        cmd += ["-c:a", "aac", "-b:a", "192k"]
+    elif fmt == "aiff":
+        cmd += ["-c:a", "pcm_s16be"]
+    cmd.append(str(dest_path))
+    result = subprocess.run(
+        cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise RuntimeError(f"FFmpeg conversion failed: {result.stderr.strip()}")
 
 
 def _download_audio_to_cache(src_url: str, fmt: str) -> Path:
@@ -245,6 +300,7 @@ def _run_split_job(
     requested_stems: List[str],
     model_alias: str,
     model_key: str,
+    output_format: Optional[str],
     start_seconds: Optional[float],
     end_seconds: Optional[float],
     overlap: Optional[float],
@@ -266,6 +322,10 @@ def _run_split_job(
         _set_job_state(job_id, stage="loading_audio")
         _append_job_log(job_id, "Decoding audio track")
         wav = load_track(str(audio_path), model.audio_channels, model.samplerate)
+
+        output_format = _normalize_output_format(output_format)
+        output_suffix = SUPPORTED_STEM_FORMATS[output_format]
+        _append_job_log(job_id, f"Output format set to {output_format.upper()}")
 
         total_samples = wav.shape[-1]
         sample_rate = model.samplerate
@@ -504,18 +564,30 @@ def _run_split_job(
             if i >= sources.shape[0]:
                 continue
 
-            output_path = job_dir / f"{stem_name}.mp3"
+            output_path = job_dir / f"{stem_name}{output_suffix}"
 
-            # Persist stems as mp3 to dramatically reduce size while keeping quality reasonable
             _append_job_log(job_id, f"Saving stem {stem_name}")
-            save_audio(
-                sources[i],
-                str(output_path),
-                sample_rate,
-                bitrate=192,
-                preset=4,
-                clip="rescale",
-            )
+            if output_format in ("mp3", "wav", "flac"):
+                save_audio(
+                    sources[i],
+                    str(output_path),
+                    sample_rate,
+                    bitrate=192,
+                    preset=4,
+                    clip="rescale",
+                )
+            else:
+                temp_wav = job_dir / f"{stem_name}__temp.wav"
+                save_audio(
+                    sources[i],
+                    str(temp_wav),
+                    sample_rate,
+                    clip="rescale",
+                )
+                try:
+                    _convert_audio_with_ffmpeg(temp_wav, output_path, output_format)
+                finally:
+                    temp_wav.unlink(missing_ok=True)
             with progress_lock:
                 progress_state["saves_done"] += 1
                 done = progress_state["segments_done"] + progress_state["saves_done"]
@@ -558,6 +630,7 @@ def _submit_split_job(
     audio_id: str,
     stems: List[str],
     model_alias: str,
+    output_format: Optional[str],
     start_seconds: Optional[float],
     end_seconds: Optional[float],
     overlap: Optional[float],
@@ -569,6 +642,7 @@ def _submit_split_job(
 
     audio_path = _locate_audio_file(audio_id)
     model_key = MODEL_MAP.get(model_alias, MODEL_MAP.get("ht-demucs-v4", "htdemucs_6s"))
+    output_format = _normalize_output_format(output_format)
 
     job_id = str(uuid.uuid4())
     with split_jobs_lock:
@@ -580,6 +654,7 @@ def _submit_split_job(
             "requested_stems": requested_stems,
             "model": model_alias,
             "model_key": model_key,
+            "output_format": output_format or "mp3",
             "start_seconds": start_seconds,
             "end_seconds": end_seconds,
             "overlap": overlap,
@@ -600,6 +675,7 @@ def _submit_split_job(
         requested_stems,
         model_alias,
         model_key,
+        output_format,
         start_seconds,
         end_seconds,
         overlap,
@@ -620,11 +696,7 @@ def download_audio(req: DownloadReq):
         return {
             "id": audio_path.stem,
             "filename": audio_path.name,
-            "mime": (
-                "audio/mpeg" if audio_path.suffix == ".mp3"
-                else "audio/ogg" if audio_path.suffix == ".opus"
-                else "audio/wav"
-            ),
+            "mime": _mime_type_for_suffix(audio_path.suffix),
             "streamUrl": f"/api/audio/{audio_path.stem}",
         }
     except Exception as e:
@@ -637,12 +709,11 @@ def stream_audio(audio_id: str):
     if not matches:
         raise HTTPException(status_code=404, detail="Audio not found")
     p = matches[0]
-    mime = (
-        "audio/mpeg" if p.suffix == ".mp3"
-        else "audio/ogg" if p.suffix == ".opus"
-        else "audio/wav"
+    return FileResponse(
+        path=str(p),
+        media_type=_mime_type_for_suffix(p.suffix),
+        filename=p.name,
     )
-    return FileResponse(path=str(p), media_type=mime, filename=p.name)
 
 
 @app.post("/api/split-audio")
@@ -652,6 +723,7 @@ def split_audio(req: SplitAudioReq):
             req.audioId,
             req.stems,
             req.model or "ht-demucs-v4",
+            req.format or "mp3",
             req.startSeconds,
             req.endSeconds,
             req.overlap,
@@ -724,11 +796,9 @@ def get_split_stem(job_id: str, stem_name: str):
             path = Path(path_str)
             if not path.exists():
                 raise HTTPException(status_code=404, detail="Stem file not found")
-            suffix = path.suffix.lower()
-            media_type = "audio/mpeg" if suffix == ".mp3" else "audio/wav"
             return FileResponse(
                 path=str(path),
-                media_type=media_type,
+                media_type=_mime_type_for_suffix(path.suffix),
                 filename=path.name,
             )
 

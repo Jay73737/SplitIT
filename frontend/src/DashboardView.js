@@ -1006,6 +1006,7 @@ export default function DashboardView({ video, onBack }) {
         audioId: backendAudioId,
         stems: selectedStems,
         model: aiModel || "ht-demucs-v4",
+        format: audioFormat || "mp3",
       };
       if (advancedMode) {
         payload.overlap = modelOverlap;
@@ -1030,6 +1031,7 @@ export default function DashboardView({ video, onBack }) {
   }, [
     advancedMode,
     aiModel,
+    audioFormat,
     backendAudioId,
     beginSplitPolling,
     duration,
@@ -1425,6 +1427,7 @@ export default function DashboardView({ video, onBack }) {
   const audioFormatOptions = [
     { value: "wav", label: "WAV" },
     { value: "aiff", label: "AIFF" },
+    { value: "m4a", label: "M4A" },
     { value: "mp3", label: "MP3" },
   ];
 
