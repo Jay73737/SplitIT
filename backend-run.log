@@ -1668,3 +1668,239 @@ WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be
 WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
 INFO:     127.0.0.1:50269 - "POST /api/download-audio HTTP/1.1" 200 OK
 INFO:     127.0.0.1:50269 - "GET /api/audio/5a4a23ef-9f25-4209-b090-663d6b4f6676 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56922 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56984 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56998 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57000 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:57002 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57002 - "GET /api/audio/4208c583-f3bc-46f9-8012-b546a1594f70 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "OPTIONS /api/split-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "POST /api/split-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57170 - "GET /api/split-audio/26a5270b-376b-41a6-910a-2fa2c3894b9f HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65014 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65052 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65054 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:65056 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65056 - "GET /api/audio/a256f213-1931-486d-9ef2-64046ff20e49 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65220 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65279 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:65281 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:50085 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50160 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50177 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50179 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:50181 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50181 - "GET /api/audio/fc291388-3811-4748-af31-57507568eaa4 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "OPTIONS /api/split-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "POST /api/split-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50370 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50393 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50405 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50405 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50405 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50405 - "GET /api/split-audio/99796709-0367-4e38-97e5-86437aa563b3 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55146 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55183 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55185 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:55183 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55183 - "GET /api/audio/764eabb8-954c-4f4e-88f7-d0cf34a2d594 HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:55448 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55508 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55510 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:55702 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:55702 - "GET /api/audio/bbc92800-49e8-433c-b7f7-fdb8280b521c HTTP/1.1" 200 OK
+WARNING: [youtube] 09839DpTctU: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] 09839DpTctU: Signature extraction failed: Some formats may be missing
+ERROR: The downloaded file is empty
+INFO:     127.0.0.1:56565 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56567 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] 09839DpTctU: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] 09839DpTctU: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:56771 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56803 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56812 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56814 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:56816 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:56816 - "GET /api/audio/8b4fc598-556a-4773-a4df-743646bcdcb1 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57222 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57238 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57240 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:57242 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57242 - "GET /api/audio/83599123-ebd0-4632-b2d5-12046171fed9 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57484 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57503 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57505 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:57507 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57507 - "GET /api/audio/17e82b0e-fa45-4b4d-924c-51b488bbdda2 HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:57767 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57767 - "GET /api/audio/b3b54c29-582c-48f1-a786-a81e7c27ce55 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58505 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58516 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58518 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:58520 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58520 - "GET /api/audio/1fe95cf1-bccb-4ab3-9eab-fd391de47a5e HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58699 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58732 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58740 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58742 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:58744 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:58744 - "GET /api/audio/45f6a432-e752-44dd-9518-210cff35d032 HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:59041 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59041 - "GET /api/audio/71cdf7c0-7c3b-40ea-b79f-db5d82ce2144 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59135 - "GET /api/health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59147 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59149 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+INFO:     127.0.0.1:59151 - "POST /api/download-audio HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59151 - "GET /api/audio/88e8b0d4-a4c3-4a58-9993-74e9dd412cd6 HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [48834]

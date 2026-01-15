@@ -2,8 +2,10 @@ import { useLayoutEffect } from "react";
 
 export default function useMirrorPillToOSWindow(
   selector = ".pill-window",
-  radius = 39
+  radius = 39,
+  deps = []
 ) {
+  const extraDeps = Array.isArray(deps) ? deps : [deps];
   useLayoutEffect(() => {
     if (!window?.electronAPI?.setPillGeometry) return;
     const el = document.querySelector(selector);
@@ -30,5 +32,5 @@ export default function useMirrorPillToOSWindow(
       window.removeEventListener("resize", send);
       window.removeEventListener("scroll", send, true);
     };
-  }, [selector, radius]);
+  }, [selector, radius, ...extraDeps]);
 }

@@ -13,8 +13,6 @@ const PANEL_HEIGHT = 478;  // Updated to match actual content height
 const DASHBOARD_HEIGHT = 900;  // Updated to match dashboard height
 
 export default function App() {
-  useMirrorPillToOSWindow(".pill-window", 39);
-
   const [results, setResults] = useState([]);
   const [msgIdx, setMsgIdx] = useState(0);
   const [selected, setSelected] = useState(null);
@@ -31,6 +29,9 @@ export default function App() {
     originY: 0,
   });
   const { selected: backendSelected, setSelected: setBackendSelected } = useSelection();
+  const hasSelection = Boolean(selected || backendSelected);
+
+  useMirrorPillToOSWindow(".pill-window", 39, [hasSelection]);
 
   useEffect(() => {
     const id = setInterval(

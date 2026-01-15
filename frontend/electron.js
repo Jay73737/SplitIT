@@ -775,6 +775,8 @@ ipcMain.on("pill:drag-start", (_evt, payload = {}) => {
   const { x, y } = payload;
   if (typeof x !== "number" || typeof y !== "number") return;
   const bounds = pillWin.getBounds();
+  const mainBounds =
+    mainWin && !mainWin.isDestroyed() ? mainWin.getBounds() : null;
   pillDragState = {
     startX: x,
     startY: y,
@@ -782,6 +784,10 @@ ipcMain.on("pill:drag-start", (_evt, payload = {}) => {
     winY: bounds.y,
     width: bounds.width,
     height: bounds.height,
+    mainX: mainBounds?.x ?? null,
+    mainY: mainBounds?.y ?? null,
+    mainWidth: mainBounds?.width ?? null,
+    mainHeight: mainBounds?.height ?? null,
   };
 });
 
@@ -802,6 +808,26 @@ ipcMain.on("pill:drag-move", (_evt, payload = {}) => {
     },
     false
   );
+  if (
+    mainWin &&
+    !mainWin.isDestroyed() &&
+    typeof pillDragState.mainX === "number" &&
+    typeof pillDragState.mainY === "number" &&
+    typeof pillDragState.mainWidth === "number" &&
+    typeof pillDragState.mainHeight === "number"
+  ) {
+    const nextMainX = Math.round(pillDragState.mainX + dx);
+    const nextMainY = Math.round(pillDragState.mainY + dy);
+    mainWin.setBounds(
+      {
+        x: nextMainX,
+        y: nextMainY,
+        width: pillDragState.mainWidth,
+        height: pillDragState.mainHeight,
+      },
+      false
+    );
+  }
 });
 
 ipcMain.on("pill:drag-end", () => {
@@ -979,9 +1005,26 @@ ipcMain.on("waveform:drag-clip", (event, payload = {}) => {
   }
 });
 
-// Optional no-ops for your existing calls
-ipcMain.on("results-opened", () => {});
-ipcMain.on("results-closed", () => {});
+// Toggle pill window visibility based on panel height
+ipcMain.on("results-opened", (_evt, height) => {
+  if (!mainWin) return;
+  ensurePillWindow();
+  if (!pillWin || pillWin.isDestroyed()) return;
+  const numericHeight = typeof height === "number" ? height : null;
+  const shouldHide = Number.isFinite(numericHeight) && numericHeight > RESULTS_H;
+  if (shouldHide) {
+    if (pillWin.isVisible()) pillWin.hide();
+  } else {
+    if (!pillWin.isVisible()) pillWin.show();
+  }
+});
+
+ipcMain.on("results-closed", () => {
+  if (!mainWin) return;
+  ensurePillWindow();
+  if (!pillWin || pillWin.isDestroyed()) return;
+  if (!pillWin.isVisible()) pillWin.show();
+});
 
 app.whenReady().then(async () => {
   try {

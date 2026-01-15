@@ -412,6 +412,8 @@ body {
   border: 2px solid transparent;
   background-clip: padding-box;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .results-window::before {
@@ -443,6 +445,8 @@ body {
   align-content: start;
   height: 90%;
   box-sizing: border-box;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .video-card {
@@ -455,6 +459,8 @@ body {
   cursor: pointer;
   overflow: hidden;
   transition: transform var(--motion-fast) var(--motion-ease), background var(--motion-fast) var(--motion-ease);
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .video-card:hover {
@@ -709,7 +715,7 @@ body {
   display: flex;
   align-items: center;
   padding: var(--dash-header-pad-y) var(--dash-header-pad-x);
-  padding-right: 156px;
+  padding-right: 216px;
   gap: var(--dash-header-gap);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   background: linear-gradient(to bottom, rgba(255, 255, 255, 0.02), transparent);
@@ -749,6 +755,17 @@ body {
   margin: 0;
 }
 
+.dash-window-controls {
+  position: absolute;
+  top: var(--dash-header-pad-y);
+  right: var(--dash-header-pad-x);
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1003;
+  -webkit-app-region: no-drag;
+}
+
 .dash-settings {
   width: 32px;
   height: 32px;
@@ -761,10 +778,6 @@ body {
   align-items: center;
   justify-content: center;
   transition: all var(--motion-fast) var(--motion-ease);
-  position: absolute;
-  top: var(--dash-header-pad-y);
-  right: calc(var(--dash-header-pad-x) + 44px);
-  z-index: 1003;
   pointer-events: auto;
 }
 
@@ -785,10 +798,6 @@ body {
   align-items: center;
   justify-content: center;
   transition: all var(--motion-fast) var(--motion-ease);
-  position: absolute;
-  top: var(--dash-header-pad-y);
-  right: calc(var(--dash-header-pad-x) + 88px);
-  z-index: 1003;
   pointer-events: auto;
 }
 
@@ -806,7 +815,7 @@ body {
   width: 32px;
   height: 32px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
+  background: transparent;
   border: none;
   color: #b8b5d6;
   cursor: pointer;
@@ -814,15 +823,73 @@ body {
   align-items: center;
   justify-content: center;
   transition: all var(--motion-fast) var(--motion-ease);
-  position: absolute;
-  top: var(--dash-header-pad-y);
-  right: var(--dash-header-pad-x);
-  z-index: 1003;
+  pointer-events: auto;
+  flex-shrink: 0;
+}
+
+.dash-close:hover { color: #fff; }
+
+.dash-close-pill {
+  height: 32px;
+  width: 32px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  overflow: hidden;
+  box-sizing: border-box;
+  transition:
+    width var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast) var(--motion-ease),
+    padding-left var(--motion-fast) var(--motion-ease);
+  -webkit-app-region: no-drag;
+}
+
+.dash-close-action {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: transparent;
+  color: #b8b5d6;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transform: translateX(10px);
+  pointer-events: none;
+  flex-shrink: 0;
+  transition:
+    opacity var(--motion-fast) var(--motion-ease),
+    transform var(--motion-fast) var(--motion-ease),
+    color var(--motion-fast) var(--motion-ease),
+    background var(--motion-fast) var(--motion-ease);
+}
+
+.dash-close-action:hover {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.dash-close-pill:hover,
+.dash-close-pill:focus-within {
+  width: 112px;
+  padding-left: 4px;
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.dash-close-pill:hover .dash-close-action,
+.dash-close-pill:focus-within .dash-close-action {
+  opacity: 1;
+  transform: translateX(0);
   pointer-events: auto;
 }
 
-.dash-close:hover {
-  background: rgba(255, 255, 255, 0.15);
+.dash-close-pill:hover .dash-close,
+.dash-close-pill:focus-within .dash-close {
   color: #fff;
 }
 
@@ -2397,6 +2464,10 @@ body {
   --dash-header-pad-x: 14px;
   gap: 12px;
   padding-right: 190px;
+}
+
+.dashboard.compact .dash-window-controls {
+  display: none;
 }
 
 .dashboard.compact .dash-info {

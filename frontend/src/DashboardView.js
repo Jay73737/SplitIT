@@ -1631,81 +1631,123 @@ export default function DashboardView({ video, onBack }) {
             </button>
           </div>
         )}
-        {canUseCompactMode && (
+        <div className="dash-window-controls" style={{ WebkitAppRegion: "no-drag" }}>
+          {canUseCompactMode && (
+            <button
+              className={`dash-compact-toggle${compactMode ? " active" : ""}`}
+              onClick={() => handleCompactToggle()}
+              style={{ WebkitAppRegion: "no-drag" }}
+              title={compactMode ? "Exit compact mode" : "Enter compact mode"}
+              type="button"
+            >
+              {compactMode ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <path
+                    d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                  <rect
+                    x="5"
+                    y="5"
+                    width="14"
+                    height="14"
+                    rx="2.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  />
+                  <rect
+                    x="9"
+                    y="9"
+                    width="6"
+                    height="6"
+                    rx="1.5"
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                  />
+                </svg>
+              )}
+            </button>
+          )}
           <button
-            className={`dash-compact-toggle${compactMode ? " active" : ""}`}
-            onClick={() => handleCompactToggle()}
+            className="dash-settings"
+            onClick={() => setSettingsOpen(true)}
             style={{ WebkitAppRegion: "no-drag" }}
-            title={compactMode ? "Exit compact mode" : "Enter compact mode"}
+            type="button"
+            title="Settings"
           >
-            {compactMode ? (
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path
+                d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+              <path
+                d="M19.4 15a1.6 1.6 0 00.32 1.76l.06.06a1.8 1.8 0 01-2.55 2.55l-.06-.06a1.6 1.6 0 00-1.76-.32 1.6 1.6 0 00-1 1.46V21a1.8 1.8 0 01-3.6 0v-.1a1.6 1.6 0 00-1-1.46 1.6 1.6 0 00-1.76.32l-.06.06a1.8 1.8 0 01-2.55-2.55l.06-.06A1.6 1.6 0 005 15a1.6 1.6 0 00-1.46-1H3.5a1.8 1.8 0 010-3.6h.1A1.6 1.6 0 005 8.94a1.6 1.6 0 00-.32-1.76l-.06-.06a1.8 1.8 0 012.55-2.55l.06.06A1.6 1.6 0 008.94 5a1.6 1.6 0 001-1.46V3.5a1.8 1.8 0 013.6 0v.1A1.6 1.6 0 0015 5a1.6 1.6 0 001.76-.32l.06-.06a1.8 1.8 0 012.55 2.55l-.06.06A1.6 1.6 0 0019 8.94a1.6 1.6 0 001.46 1h.1a1.8 1.8 0 010 3.6h-.1a1.6 1.6 0 00-1.46 1z"
+                stroke="currentColor"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+          <div className="dash-close-pill" style={{ WebkitAppRegion: "no-drag" }}>
+            <button
+              type="button"
+              className="dash-close-action back"
+              onClick={onBack}
+              title="Back"
+              style={{ WebkitAppRegion: "no-drag" }}
+            >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
                 <path
-                  d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"
+                  d="M14 6l-6 6 6 6"
                   stroke="currentColor"
-                  strokeWidth="1.6"
+                  strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
-            ) : (
+            </button>
+            <button
+              type="button"
+              className="dash-close-action minimize"
+              onClick={handleCompactMinimize}
+              title="Minimize"
+              style={{ WebkitAppRegion: "no-drag" }}
+            >
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-                <rect
-                  x="5"
-                  y="5"
-                  width="14"
-                  height="14"
-                  rx="2.5"
+                <path
+                  d="M5 12h14"
                   stroke="currentColor"
-                  strokeWidth="1.6"
-                />
-                <rect
-                  x="9"
-                  y="9"
-                  width="6"
-                  height="6"
-                  rx="1.5"
-                  stroke="currentColor"
-                  strokeWidth="1.6"
+                  strokeWidth="2"
+                  strokeLinecap="round"
                 />
               </svg>
-            )}
-          </button>
-        )}
-        <button
-          className="dash-settings"
-          onClick={() => setSettingsOpen(true)}
-          style={{ WebkitAppRegion: "no-drag" }}
-        >
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"
-              stroke="currentColor"
-              strokeWidth="1.8"
-            />
-            <path
-              d="M19.4 15a1.6 1.6 0 00.32 1.76l.06.06a1.8 1.8 0 01-2.55 2.55l-.06-.06a1.6 1.6 0 00-1.76-.32 1.6 1.6 0 00-1 1.46V21a1.8 1.8 0 01-3.6 0v-.1a1.6 1.6 0 00-1-1.46 1.6 1.6 0 00-1.76.32l-.06.06a1.8 1.8 0 01-2.55-2.55l.06-.06A1.6 1.6 0 005 15a1.6 1.6 0 00-1.46-1H3.5a1.8 1.8 0 010-3.6h.1A1.6 1.6 0 005 8.94a1.6 1.6 0 00-.32-1.76l-.06-.06a1.8 1.8 0 012.55-2.55l.06.06A1.6 1.6 0 008.94 5a1.6 1.6 0 001-1.46V3.5a1.8 1.8 0 013.6 0v.1A1.6 1.6 0 0015 5a1.6 1.6 0 001.76-.32l.06-.06a1.8 1.8 0 012.55 2.55l-.06.06A1.6 1.6 0 0019 8.94a1.6 1.6 0 001.46 1h.1a1.8 1.8 0 010 3.6h-.1a1.6 1.6 0 00-1.46 1z"
-              stroke="currentColor"
-              strokeWidth="1.4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
-        <button
-          className="dash-close"
-          onClick={onBack}
-          style={{ WebkitAppRegion: "no-drag" }}
-        >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path
-              d="M18 6L6 18M6 6l12 12"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
+            </button>
+            <button
+              className="dash-close"
+              onClick={onBack}
+              style={{ WebkitAppRegion: "no-drag" }}
+              title="Close"
+              type="button"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M18 6L6 18M6 6l12 12"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
 
       {settingsOpen && (

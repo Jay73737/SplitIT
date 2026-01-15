@@ -2524,3 +2524,117 @@
 [0] 
 [0] webpack compiled with 1 warning
 [0] npm start exited with code 1
+
+> stem-splitter-ui@0.1.0 electron-dev
+> concurrently "npm start" "wait-on http://localhost:3000 && env -u ELECTRON_RUN_AS_NODE ELECTRON_START_URL=http://localhost:3000 electron ."
+
+[0] 
+[0] > stem-splitter-ui@0.1.0 start
+[0] > react-scripts start
+[0] 
+[0] (node:36908) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+[0] (Use `node --trace-deprecation ...` to show where the warning was created)
+[0] (node:36908) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+[0] (node:36908) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+[0] Starting the development server...
+[0] 
+[0] Compiled successfully!
+[0] 
+[0] You can now view stem-splitter-ui in the browser.
+[0] 
+[0]   Local:            http://localhost:3000
+[0]   On Your Network:  http://10.0.0.98:3000
+[0] 
+[0] Note that the development build is not optimized.
+[0] To create a production build, use npm run build.
+[0] 
+[0] webpack compiled successfully
+[1] Starting backend server...
+[1] Bundled backend not found; using development Python environment.
+[1] Waiting for backend... (1/30)
+[1] Backend stderr: /Users/geet/SplitMe-1/.venv/lib/python3.9/site-packages/urllib3/__init__.py:35: NotOpenSSLWarning: urllib3 v2 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with 'LibreSSL 2.8.3'. See: https://github.com/urllib3/urllib3/issues/3020
+[1]   warnings.warn(
+[1] 
+[1] Waiting for backend... (2/30)
+[1] Waiting for backend... (3/30)
+[1] Backend stderr: INFO:     Started server process [36992]
+[1] INFO:     Waiting for application startup.
+[1] 
+[1] Backend stderr: INFO:     Application startup complete.
+[1] 
+[1] Backend stderr: INFO:     Uvicorn running on http://127.0.0.1:5050 (Press CTRL+C to quit)
+[1] 
+[1] Backend stdout: INFO:     127.0.0.1:63997 - "GET /api/health HTTP/1.1" 200 OK
+[1] 
+[1] Backend server is ready!
+[1] Backend stdout: INFO:     127.0.0.1:64034 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+[1] 
+[1] Backend stdout: INFO:     127.0.0.1:64036 - "OPTIONS /api/download-audio HTTP/1.1" 200 OK
+[1] 
+[1] Backend stderr: WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+[1] 
+[1] Backend stderr: WARNING: [youtube] dLl4PZtxia8: Signature extraction failed: Some formats may be missing
+[1] 
+[1] Backend stdout: INFO:     127.0.0.1:64038 - "POST /api/download-audio HTTP/1.1" 200 OK
+[1] 
+[1] Backend stdout: INFO:     127.0.0.1:64038 - "GET /api/audio/490d663e-2702-48cf-acd5-04db4034b75c HTTP/1.1" 200 OK
+[1] 
+[1] Stopping backend server...
+[1] wait-on http://localhost:3000 && env -u ELECTRON_RUN_AS_NODE ELECTRON_START_URL=http://localhost:3000 electron . exited with code 0
+[0] Compiling...
+[0] Compiled successfully!
+[0] webpack compiled successfully
+[0] Compiling...
+[0] Compiled successfully!
+[0] webpack compiled successfully
+[0] Compiling...
+[0] Compiled successfully!
+[0] webpack compiled successfully
+[0] Compiling...
+[0] Compiled successfully!
+[0] webpack compiled successfully
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning
+[0] Compiling...
+[0] Compiled with warnings.
+[0] 
+[0] [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] Search for the keywords to learn more about each warning.
+[0] To ignore, add // eslint-disable-next-line to the line before.
+[0] 
+[0] WARNING in [eslint] 
+[0] src/useMirrorPillToOSWindow.js
+[0]   Line 35:25:  React Hook useLayoutEffect has a spread element in its dependency array. This means we can't statically verify whether you've passed the correct dependencies  react-hooks/exhaustive-deps
+[0] 
+[0] webpack compiled with 1 warning

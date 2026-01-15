@@ -62,4 +62,4 @@ INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
 INFO:     Finished server process [24619]
 
-Backend process exited with code 0
+Backend process exited with code
