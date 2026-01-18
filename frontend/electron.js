@@ -925,8 +925,8 @@ ipcMain.on("stems:drag-file", async (event, payload = {}) => {
         const captureRect = {
           x: Math.max(0, Math.round(dragRect.x || 0)),
           y: Math.max(0, Math.round(dragRect.y || 0)),
-          width: Math.round(dragRect.width),
-          height: Math.round(dragRect.height),
+          width: Math.max(1, Math.round(dragRect.width)),
+          height: Math.max(1, Math.round(dragRect.height)),
         };
         const captured = await event.sender.capturePage(captureRect);
         if (captured && !captured.isEmpty()) {
@@ -991,9 +991,9 @@ ipcMain.handle("settings:pick-folder", async () => {
   return result.filePaths[0];
 });
 
-ipcMain.on("waveform:drag-clip", (event, payload = {}) => {
+ipcMain.on("waveform:drag-clip", async (event, payload = {}) => {
   try {
-    const { data, fileName, displayName } = payload;
+    const { data, fileName, displayName, dragRect } = payload;
     if (!data) {
       throw new Error("Missing clip data");
     }
@@ -1026,7 +1026,29 @@ ipcMain.on("waveform:drag-clip", (event, payload = {}) => {
       }
     }
 
-    const icon = getWaveformDragIcon();
+    let icon = getWaveformDragIcon();
+    if (
+      dragRect &&
+      Number.isFinite(dragRect.width) &&
+      Number.isFinite(dragRect.height) &&
+      dragRect.width > 0 &&
+      dragRect.height > 0
+    ) {
+      try {
+        const captureRect = {
+          x: Math.max(0, Math.round(dragRect.x || 0)),
+          y: Math.max(0, Math.round(dragRect.y || 0)),
+          width: Math.round(dragRect.width),
+          height: Math.round(dragRect.height),
+        };
+        const captured = await event.sender.capturePage(captureRect);
+        if (captured && !captured.isEmpty()) {
+          icon = captured;
+        }
+      } catch (error) {
+        logMain("waveform-drag-icon-error", { message: error.message });
+      }
+    }
     event.sender.startDrag({
       file: resolved,
       icon,

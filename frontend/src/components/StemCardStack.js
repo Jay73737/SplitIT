@@ -64,6 +64,8 @@ export default function StemCardStack({
   allowExpand = true,
   downloading = false,
   expanded = false,
+  onPlaybackTime,
+  onPlaybackState,
 }) {
   const layoutTransition = {
     duration: 0.9,
@@ -93,6 +95,7 @@ export default function StemCardStack({
   const [currentTimes, setCurrentTimes] = useState(() => decorated.map((stem) => stem.duration ?? 0));
   const [durations, setDurations] = useState(() => decorated.map((stem) => stem.duration ?? 0));
   const playerRef = useRef(null);
+  const playbackRafRef = useRef(0);
   const playingIndexRef = useRef(playingIndex);
   const wheelLockRef = useRef(false);
   const wasExpandedRef = useRef(expanded);
@@ -101,9 +104,37 @@ export default function StemCardStack({
   const expandStagger = 0.16;
   const collapseStagger = 0.12;
 
+  const stopPlaybackRaf = useCallback(() => {
+    if (playbackRafRef.current) {
+      cancelAnimationFrame(playbackRafRef.current);
+      playbackRafRef.current = 0;
+    }
+  }, []);
+
+  const startPlaybackRaf = useCallback(() => {
+    if (playbackRafRef.current) return;
+    const tick = () => {
+      const player = playerRef.current;
+      if (!player || player.paused) {
+        playbackRafRef.current = 0;
+        return;
+      }
+      onPlaybackTime?.(player.currentTime || 0);
+      playbackRafRef.current = requestAnimationFrame(tick);
+    };
+    playbackRafRef.current = requestAnimationFrame(tick);
+  }, [onPlaybackTime]);
+
   useEffect(() => {
     playingIndexRef.current = playingIndex;
   }, [playingIndex]);
+
+  useEffect(() => {
+    onPlaybackState?.(playingIndex != null);
+    if (playingIndex == null) {
+      onPlaybackTime?.(0);
+    }
+  }, [onPlaybackState, onPlaybackTime, playingIndex]);
 
   useEffect(() => {
     wasExpandedRef.current = expanded;
@@ -131,6 +162,7 @@ export default function StemCardStack({
         next[index] = value;
         return next;
       });
+      onPlaybackTime?.(value);
     };
 
     const handleLoadedMetadata = () => {
@@ -145,29 +177,46 @@ export default function StemCardStack({
       });
     };
 
+    const handlePlay = () => {
+      startPlaybackRaf();
+    };
+
+    const handlePause = () => {
+      stopPlaybackRaf();
+    };
+
     const handleEnded = () => {
+      stopPlaybackRaf();
       setPlayingIndex(null);
+      onPlaybackState?.(false);
+      onPlaybackTime?.(0);
     };
 
     player.addEventListener("timeupdate", handleTimeUpdate);
     player.addEventListener("loadedmetadata", handleLoadedMetadata);
+    player.addEventListener("play", handlePlay);
+    player.addEventListener("pause", handlePause);
     player.addEventListener("ended", handleEnded);
 
     return () => {
       player.removeEventListener("timeupdate", handleTimeUpdate);
       player.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      player.removeEventListener("play", handlePlay);
+      player.removeEventListener("pause", handlePause);
       player.removeEventListener("ended", handleEnded);
+      stopPlaybackRaf();
     };
-  }, [decorated]);
+  }, [decorated, onPlaybackState, onPlaybackTime, startPlaybackRaf, stopPlaybackRaf]);
 
   useEffect(() => {
     const player = playerRef.current;
     player?.pause?.();
+    stopPlaybackRaf();
     setPlayingIndex(null);
     setCurrentTimes(decorated.map((stem) => stem.duration ?? 0));
     setDurations(decorated.map((stem) => stem.duration ?? 0));
     setActiveIndex((prev) => clamp(prev, 0, Math.max(decorated.length - 1, 0)));
-  }, [decorated]);
+  }, [decorated, stopPlaybackRaf]);
 
   useEffect(() => () => {
     const player = playerRef.current;
@@ -177,7 +226,10 @@ export default function StemCardStack({
       player.remove();
       playerRef.current = null;
     }
-  }, []);
+    stopPlaybackRaf();
+    onPlaybackState?.(false);
+    onPlaybackTime?.(0);
+  }, [onPlaybackState, onPlaybackTime, stopPlaybackRaf]);
 
   const navigate = useCallback(
     (delta) => {
@@ -228,6 +280,7 @@ export default function StemCardStack({
 
       if (playingIndex === index) {
         player.pause();
+        stopPlaybackRaf();
         setPlayingIndex(null);
         return;
       }
@@ -243,12 +296,14 @@ export default function StemCardStack({
         player.load();
         await player.play();
         setPlayingIndex(index);
+        startPlaybackRaf();
       } catch (err) {
         console.error("Failed to play stem:", err);
+        stopPlaybackRaf();
         setPlayingIndex(null);
       }
     },
-    [decorated, playingIndex]
+    [decorated, playingIndex, startPlaybackRaf, stopPlaybackRaf]
   );
 
   const handleDragStart = useCallback((event, stem) => {

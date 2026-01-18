@@ -62,6 +62,7 @@ export default function DashboardView({ video, onBack }) {
   const waveformScrollRef = useRef(null);
   const sidebarRef = useRef(null);
   const waveformContainerRef = useRef(null);
+  const glowRef = useRef(null);
   const [waveformMask, setWaveformMask] = useState(null);
   const volume = DEFAULT_VOLUME;
   const reactivity = DEFAULT_REACTIVITY;
@@ -75,6 +76,7 @@ export default function DashboardView({ video, onBack }) {
   const gradientStripRef = useRef(null);
   const gradientDrawRef = useRef(0);
   const gradientTimeRef = useRef(null);
+  const glowBeatRef = useRef(0);
   const selectionInitializedRef = useRef(false);
   const [selectionStart, setSelectionStart] = useState(0);
   const [selectionEnd, setSelectionEnd] = useState(0);
@@ -93,6 +95,8 @@ export default function DashboardView({ video, onBack }) {
   const [advancedMode, setAdvancedMode] = useState(false);
   const [modelOverlap, setModelOverlap] = useState(0.25);
   const [modelShifts, setModelShifts] = useState(4);
+  const [partyMode, setPartyMode] = useState(false);
+  const [draggingSlider, setDraggingSlider] = useState(null);
   const [waveformZoomed, setWaveformZoomed] = useState(false);
   const waveformZoomRef = useRef(1);
   const zoomAnimRef = useRef(null);
@@ -103,8 +107,10 @@ export default function DashboardView({ video, onBack }) {
   const [splitResults, setSplitResults] = useState([]);
   const splitPollRef = useRef(null);
   const [expandedStems, setExpandedStems] = useState(false);
+  const [stemPlaying, setStemPlaying] = useState(false);
   const [downloadingAll, setDownloadingAll] = useState(false);
   const [advancedConsoleLines, setAdvancedConsoleLines] = useState([]);
+  const stemPlaybackTimeRef = useRef(0);
   const electronAPI =
     typeof window !== "undefined" ? window.electronAPI : null;
   const canUseCompactMode = Boolean(electronAPI?.setCompactMode);
@@ -124,6 +130,34 @@ export default function DashboardView({ video, onBack }) {
       }
     };
   }, []);
+
+  const handleStemPlaybackTime = useCallback((timeValue) => {
+    stemPlaybackTimeRef.current = timeValue;
+  }, []);
+
+  const handleStemPlaybackState = useCallback((isPlaying) => {
+    setStemPlaying(isPlaying);
+    if (!isPlaying) {
+      stemPlaybackTimeRef.current = 0;
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!draggingSlider) return;
+    const handleRelease = () => setDraggingSlider(null);
+    window.addEventListener("pointerup", handleRelease);
+    window.addEventListener("pointercancel", handleRelease);
+    window.addEventListener("mouseup", handleRelease);
+    window.addEventListener("touchend", handleRelease);
+    window.addEventListener("touchcancel", handleRelease);
+    return () => {
+      window.removeEventListener("pointerup", handleRelease);
+      window.removeEventListener("pointercancel", handleRelease);
+      window.removeEventListener("mouseup", handleRelease);
+      window.removeEventListener("touchend", handleRelease);
+      window.removeEventListener("touchcancel", handleRelease);
+    };
+  }, [draggingSlider]);
 
   const updateAdvancedConsoleOffset = useCallback(() => {
     const sidebar = sidebarRef.current;
@@ -304,6 +338,13 @@ export default function DashboardView({ video, onBack }) {
     gradientBandsRef.current.forEach((band) => {
       band.value = value;
     });
+  }, []);
+
+  const applyGlowBeat = useCallback((value) => {
+    const node = glowRef.current;
+    if (!node) return;
+    const clamped = Math.max(0, Math.min(1, value));
+    node.style.setProperty("--glow-beat", clamped.toFixed(3));
   }, []);
 
   const getPeakAtTime = useCallback(
@@ -531,6 +572,16 @@ export default function DashboardView({ video, onBack }) {
         beatThresholdBase - reactivityScale * beatThresholdReactive
       );
       const beat = Math.max(0, baseAmp - avgNext * beatThreshold);
+      const beatStrength = Math.min(1, beat * (2 + reactivityScale * 0.18));
+      const prevBeat = glowBeatRef.current || 0;
+      const beatNext =
+        beatStrength > prevBeat ? beatStrength : prevBeat * 0.965;
+      glowBeatRef.current = beatNext;
+      const beatActive =
+        partyMode && (stemPlaying || (waveformInstance ? waveformPlaying : playing));
+      if (beatActive) {
+        applyGlowBeat(beatNext);
+      }
       const bands = gradientBandsRef.current;
       const center = (bands.length - 1) / 2;
       const offsetStep = Math.min(
@@ -562,6 +613,7 @@ export default function DashboardView({ video, onBack }) {
       scheduleGradientDraw();
     },
     [
+      applyGlowBeat,
       ampBase,
       ampReactive,
       attackBase,
@@ -576,12 +628,16 @@ export default function DashboardView({ video, onBack }) {
       duration,
       getPeakAtTime,
       initGradientBands,
+      partyMode,
+      playing,
       reactivity,
       releaseBase,
       releaseMax,
       releaseReactive,
       scheduleGradientDraw,
+      stemPlaying,
       waveformInstance,
+      waveformPlaying,
     ]
   );
 
@@ -1062,12 +1118,12 @@ export default function DashboardView({ video, onBack }) {
     !audioError;
   const waveformReady = Boolean(waveformInstance && duration > 0);
   const showTimeline = showWaveform && duration > 0 && selectionEnd > selectionStart;
-  const showLoadingGlow =
-    audioLoading ||
-    isSplitRunning ||
-    (!showStemStack && !audioError && !splitError && !waveformReady);
+  const showLoadingGlow = true;
   const transportLoading =
-    !showStemStack && !audioError && !splitError && !waveformReady;
+    !showStemStack &&
+    !audioError &&
+    !splitError &&
+    (!waveformReady || isSplitRunning);
 
   useEffect(() => {
     if (!showWaveform || !waveformInstance) return;
@@ -1086,6 +1142,49 @@ export default function DashboardView({ video, onBack }) {
     rafId = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(rafId);
   }, [showWaveform, updateGradientPulse, waveformInstance, waveformPlaying]);
+
+  useEffect(() => {
+    if (!partyMode || showWaveform) return;
+    let rafId = 0;
+    const tick = () => {
+      const isPlaying =
+        stemPlaying || (waveformInstance ? waveformPlaying : playing);
+      if (isPlaying) {
+        const timeValue = stemPlaying
+          ? stemPlaybackTimeRef.current
+          : waveformInstance?.getCurrentTime?.() ?? current;
+        updateGradientPulse(timeValue);
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+    rafId = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafId);
+  }, [
+    current,
+    partyMode,
+    playing,
+    showWaveform,
+    stemPlaying,
+    updateGradientPulse,
+    waveformInstance,
+    waveformPlaying,
+  ]);
+
+  useEffect(() => {
+    if (partyMode) return;
+    glowBeatRef.current = 0;
+    applyGlowBeat(0);
+  }, [partyMode, applyGlowBeat]);
+
+  useEffect(() => {
+    if (!partyMode) return;
+    const isPlaying =
+      stemPlaying || (waveformInstance ? waveformPlaying : playing);
+    if (!isPlaying) {
+      glowBeatRef.current = 0;
+      applyGlowBeat(0);
+    }
+  }, [partyMode, playing, stemPlaying, waveformInstance, waveformPlaying, applyGlowBeat]);
 
   useEffect(() => {
     if (!showWaveform || !waveformInstance) return;
@@ -1387,6 +1486,20 @@ export default function DashboardView({ video, onBack }) {
       }
       event.preventDefault();
       event.stopPropagation();
+      let dragRect = null;
+      if (event.currentTarget instanceof HTMLElement) {
+        const rect = event.currentTarget.getBoundingClientRect();
+        if (rect.width && rect.height) {
+          const scrollX = typeof window !== "undefined" ? window.scrollX || 0 : 0;
+          const scrollY = typeof window !== "undefined" ? window.scrollY || 0 : 0;
+          dragRect = {
+            x: Math.round(rect.left + scrollX),
+            y: Math.round(rect.top + scrollY),
+            width: Math.max(1, Math.round(rect.width)),
+            height: Math.max(1, Math.round(rect.height)),
+          };
+        }
+      }
       if (event.dataTransfer) {
         event.dataTransfer.effectAllowed = "copy";
       }
@@ -1394,6 +1507,8 @@ export default function DashboardView({ video, onBack }) {
         data: syncBuffer,
         fileName,
         displayName,
+        dragRect,
+        pixelRatio: typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1,
       });
     },
     [
@@ -1481,6 +1596,10 @@ export default function DashboardView({ video, onBack }) {
   const waveformScrollPxPerSec = compactMode ? 22 : 18;
   const allowWaveformScroll = advancedMode && waveformZoomed;
   const showAdvancedConsole = advancedMode && !compactMode;
+  const overlapPct = Math.min(1, Math.max(0, modelOverlap));
+  const shiftsPct = Math.min(1, Math.max(0, modelShifts / 10));
+  const overlapDisplay = modelOverlap.toFixed(2);
+  const shiftsDisplay = Number(modelShifts).toFixed(0);
   const advancedConsoleActive =
     showAdvancedConsole &&
     (splitStatus === "processing" || splitStatus === "queued");
@@ -1530,7 +1649,7 @@ export default function DashboardView({ video, onBack }) {
   const showSelectionOverlay =
     exportWidthPct > 0 &&
     exportWidthPct < 0.999 &&
-    (useHighlightForExport || selectionEnd > selectionStart);
+    useHighlightForExport;
   const activeClip = showTimeline
     ? `inset(0 ${(1 - selectionEndPct) * 100}% 0 ${selectionStartPct * 100}%)`
     : "inset(0 0 0 0)";
@@ -1562,7 +1681,12 @@ export default function DashboardView({ video, onBack }) {
       exit={{ opacity: 0, scale: 0.98 }}
       transition={{ type: "spring", stiffness: 160, damping: 22, mass: 0.95, delay: 0.06 }}
     >
-      <div className={`dash-loading-glow${showLoadingGlow ? " active" : ""}`}>
+      <div
+        ref={glowRef}
+        className={`dash-loading-glow${showLoadingGlow ? " active" : ""}${
+          partyMode ? " party-mode" : ""
+        }`}
+      >
         <span className="glow-orb orb-a">
           <span className="glow-orb-layer layer-one" />
           <span className="glow-orb-layer layer-two" />
@@ -1858,6 +1982,20 @@ export default function DashboardView({ video, onBack }) {
                 features. Follow the advanced mode guide before enabling this feature.
               </p>
             </div>
+            <div className="settings-section">
+              <div className="settings-advanced-row">
+                <div className="settings-label">Party Mode</div>
+                <button
+                  className={`settings-toggle${partyMode ? " active" : ""}`}
+                  onClick={() => setPartyMode((prev) => !prev)}
+                >
+                  {partyMode ? "ON" : "OFF"}
+                </button>
+              </div>
+              <p className="settings-description">
+                Pulse the background glow to the beat while audio is playing.
+              </p>
+            </div>
           </div>
         </div>
       )}
@@ -1885,29 +2023,63 @@ export default function DashboardView({ video, onBack }) {
 
             {advancedMode && (
               <div className="advanced-controls">
-                <div className="advanced-slider overlap">
+                <div
+                  className={`advanced-slider overlap${
+                    draggingSlider === "overlap" ? " dragging" : ""
+                  }`}
+                  style={{ "--slider-pct": `${overlapPct * 100}%` }}
+                >
                   <label htmlFor="advanced-overlap">Overlap</label>
-                  <input
-                    id="advanced-overlap"
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={modelOverlap}
-                    onChange={(event) => setModelOverlap(Number(event.target.value))}
-                  />
+                  <div className="advanced-slider-track">
+                    <input
+                      id="advanced-overlap"
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.01"
+                      value={modelOverlap}
+                      onChange={(event) => setModelOverlap(Number(event.target.value))}
+                      onPointerDown={() => setDraggingSlider("overlap")}
+                      onPointerUp={() => setDraggingSlider(null)}
+                      onPointerCancel={() => setDraggingSlider(null)}
+                      onMouseDown={() => setDraggingSlider("overlap")}
+                      onMouseUp={() => setDraggingSlider(null)}
+                      onTouchStart={() => setDraggingSlider("overlap")}
+                      onTouchEnd={() => setDraggingSlider(null)}
+                      onTouchCancel={() => setDraggingSlider(null)}
+                      onBlur={() => setDraggingSlider(null)}
+                    />
+                    <div className="advanced-slider-bubble">{overlapDisplay}</div>
+                  </div>
                 </div>
-                <div className="advanced-slider shifts">
+                <div
+                  className={`advanced-slider shifts${
+                    draggingSlider === "shifts" ? " dragging" : ""
+                  }`}
+                  style={{ "--slider-pct": `${shiftsPct * 100}%` }}
+                >
                   <label htmlFor="advanced-shifts">Shifts</label>
-                  <input
-                    id="advanced-shifts"
-                    type="range"
-                    min="0"
-                    max="10"
-                    step="1"
-                    value={modelShifts}
-                    onChange={(event) => setModelShifts(Number(event.target.value))}
-                  />
+                  <div className="advanced-slider-track">
+                    <input
+                      id="advanced-shifts"
+                      type="range"
+                      min="0"
+                      max="10"
+                      step="1"
+                      value={modelShifts}
+                      onChange={(event) => setModelShifts(Number(event.target.value))}
+                      onPointerDown={() => setDraggingSlider("shifts")}
+                      onPointerUp={() => setDraggingSlider(null)}
+                      onPointerCancel={() => setDraggingSlider(null)}
+                      onMouseDown={() => setDraggingSlider("shifts")}
+                      onMouseUp={() => setDraggingSlider(null)}
+                      onTouchStart={() => setDraggingSlider("shifts")}
+                      onTouchEnd={() => setDraggingSlider(null)}
+                      onTouchCancel={() => setDraggingSlider(null)}
+                      onBlur={() => setDraggingSlider(null)}
+                    />
+                    <div className="advanced-slider-bubble">{shiftsDisplay}</div>
+                  </div>
                 </div>
               </div>
             )}
@@ -1976,22 +2148,9 @@ export default function DashboardView({ video, onBack }) {
                 downloading={downloadingAll}
                 exportFormat={audioFormat}
                 allowExpand={!compactMode}
+                onPlaybackState={handleStemPlaybackState}
+                onPlaybackTime={handleStemPlaybackTime}
               />
-            )}
-
-            {!audioLoading && !showStemStack && isSplitRunning && (
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  height: "100%",
-                  color: "#fff",
-                  fontSize: "12px",
-                }}
-              >
-                Splitting stems… this can take a minute.
-              </div>
             )}
 
             {!audioLoading && splitStatus === "error" && splitError && (
