@@ -13,6 +13,8 @@ body {
   overflow: hidden;
   width: 100vw;
   height: 100vh;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .App {
@@ -26,6 +28,15 @@ body {
   position: relative;
   overflow: hidden;
   z-index: 1;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .pill-wrapper {
@@ -3028,6 +3039,7 @@ body {
 .dashboard.compact .stem-stack-instructions {
   margin-top: 4px;
   font-size: 11px;
+  transform: translateY(44px);
 }
 
 .dashboard.compact .stem-stack-actions {
@@ -3035,6 +3047,7 @@ body {
   justify-content: center;
   align-self: center;
   margin-top: 0;
+  transform: translateY(64px);
 }
 
 .dashboard.compact .stem-action-pill {
