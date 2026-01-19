@@ -71,7 +71,7 @@ textarea,
   align-items: center;
   justify-content: center;
   border-radius: 39px;
-  background: rgba(0, 0, 0, 0.7);
+  background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(30px) saturate(180%) brightness(0.7);
   -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(0.7);
   overflow: hidden;
@@ -415,7 +415,7 @@ textarea,
   top: 120px;
   left: calc(50% - 480px);
   border-radius: 28px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.9);
   backdrop-filter: blur(30px) saturate(180%) brightness(0.8);
   -webkit-backdrop-filter: blur(30px) saturate(180%) brightness(0.8);
   overflow: hidden;
@@ -2992,7 +2992,7 @@ textarea,
   max-width: 100%;
   gap: 8px;
   align-items: center;
-  transform: translateY(-48px);
+  transform: translateY(-30px);
 }
 
 .dashboard.compact .stem-stack-inner {
