@@ -1,16 +1,25 @@
 .card {
   position: relative;
-  background: rgba(0, 0, 0, 0.75);
-  border-radius: 14px;
-  overflow: hidden;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  background: linear-gradient(180deg, rgba(5, 10, 18, 0.78), rgba(13, 31, 48, 0.94));
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: transform 0.2s, border-color 0.2s;
   cursor: pointer;
-  transition: transform 0.2s;
-}
-.card:hover {
-  transform: translateY(-6px);
 }
 
-/* glowing hover outline */
+.card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(255, 214, 107, 0.7);
+}
+
+.selected {
+  border-color: rgba(255, 214, 107, 0.88);
+  box-shadow: 0 0 0 1px rgba(255, 214, 107, 0.35);
+}
+
 .card::after {
   content: "";
   position: absolute;
@@ -40,18 +49,46 @@
 
 .thumb {
   width: 100%;
-  height: 120px;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .title {
   color: #fff;
-  font-size: 14px;
-  padding: 8px 8px 4px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  line-height: 1.35;
 }
 
 .channel {
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 11px;
-  padding: 0 8px 8px;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.88rem;
+}
+
+.duration {
+  color: #ffd66b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.actionButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  border-radius: 14px;
+  font-weight: 700;
+  border: none;
+  background: linear-gradient(120deg, #89d4ff, #c4f0ff);
+  color: #102033;
+  cursor: pointer;
 }

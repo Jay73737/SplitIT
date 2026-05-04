@@ -1,8 +1,21 @@
 
 /__pycache__/
-/config.json
+**/__pycache__/
 **/__pycahce__/
+/config.json
 *.wav
 /ffmpeg/
 /SplitMe/
-/_demucs/__pycache__/
+
+# Virtual environments
+/.venv/
+/.venv-linux/
+
+# Frontend build output & cache
+/frontend/dist/
+/frontend/.parcel-cache/
+/frontend/node_modules/
+
+# Cookies (sensitive)
+yt_cookies.txt
+*.txt.bak
