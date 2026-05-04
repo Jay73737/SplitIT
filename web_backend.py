@@ -28,8 +28,11 @@ app = FastAPI(
         "Stem-splitting API powered by Demucs. "
         "Submit a YouTube video ID or an audio file upload, poll the returned job_id for progress, "
         "then download the separated WAV stems.\n\n"
-        "Interactive docs: **/docs** · Alternative (ReDoc): **/redoc**"
+        "Interactive docs: **/api/docs** · Alternative (ReDoc): **/api/redoc**"
     ),
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
 )
 
 # Allow any origin so third-party frontends can call the API freely.
