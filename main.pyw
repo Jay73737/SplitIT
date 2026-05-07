@@ -632,7 +632,7 @@ class MainGUI(QWidget):
 
     
     # Runs when the download is finished.  Converts the .webm file to a .wav file with ffmpeg, then sets the downloaded song box to the downloaded file
-    def download_complete(self,valid,  file_path: Path):
+    def download_complete(self,valid,  file_path: Path, error_message: str = ""):
         file = str(file_path.absolute())
         if valid:
             if file_path.suffix != '.wav':
@@ -652,9 +652,10 @@ class MainGUI(QWidget):
             self.split_stems_file.setText(f"Loaded File: {file}")
             self.progress_bar.hide()
         else:
-            
+            self.progress_bar.hide()
+            message = error_message or 'The downloader did not return a valid audio file.'
             print('didnt get a valid file back from downloader')
-            raise FileNotFoundError()
+            QMessageBox.critical(self, 'Download Error', message)
 
     # This updates the draggable stem boxes that are displayed after the stems are split.    
     def update_stems_display(self, stems_folder: Path):

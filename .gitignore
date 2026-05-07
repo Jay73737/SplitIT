@@ -6,3 +6,29 @@
 /ffmpeg/
 /SplitMe/
 /_demucs/__pycache__/
+
+# Backend freeze artifacts
+/backend/build/
+/backend/dist/
+/backend/build-venv-*/
+
+# Frontend / electron-builder artifacts
+/frontend/dist/
+/frontend/release/
+/frontend/resources/
+/frontend/.parcel-cache/
+/frontend/node_modules/
+
+# Secrets / keys - NEVER commit
+bigkey
+bigkey*
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# Audio output (Ableton analysis sidecars; *.wav already ignored above)
+*.asd
+
+# Stray nested project copy at repo root (not the source tree)
+/SplitIT/

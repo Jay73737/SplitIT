@@ -1,0 +1,15 @@
+[Unit]
+Description=SplitIT FastAPI Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/splitit/backend
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/opt/splitit/.venv/bin/uvicorn app:app --host 127.0.0.1 --port 8000
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

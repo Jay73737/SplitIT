@@ -1,6 +1,7 @@
 from PyQt6.QtCore import QThread, pyqtSignal
 import yt_dlp
 import os
+import shutil
 import traceback
 from pathlib import Path
 from contextvars import ContextVar
@@ -18,12 +19,28 @@ os.environ["PATH"] += os.pathsep + str(ffmpeg_path.absolute())
 #url = 'https://www.youtube.com/watch?v=x4SsfuOolkU'
 
 
+def _resolve_ffmpeg_directory() -> Path | None:
+    bundled_dir = ffmpeg_path.absolute()
+    bundled_bin_dir = bundled_dir / 'bin'
+    candidate_directories = [bundled_dir, bundled_bin_dir]
+
+    for directory in candidate_directories:
+        if (directory / 'ffmpeg.exe').exists() and (directory / 'ffprobe.exe').exists():
+            return directory
+
+    return None
+
+
+def _ffmpeg_tools_on_path() -> bool:
+    return shutil.which('ffmpeg') is not None and shutil.which('ffprobe') is not None
+
+
 def sanitize_folder_name(name: str) -> str:
     # Remove invalid characters for Windows paths
     return re.sub(r'[<>:"|?*]', '', name)
 class DownloadThread(QThread):
   
-    finished_signal = pyqtSignal(bool,  Path) 
+    finished_signal = pyqtSignal(bool,  Path, str) 
 
 
     def __init__(self, url, save_path):
@@ -34,14 +51,23 @@ class DownloadThread(QThread):
         self.save_path = save_path
         self.service = None
         self.downloaded_filename = ""
-        self.ffmpeg_path =  Path('ffmpeg\\ffmpeg.exe').absolute()
-       
-        os.environ["PATH"] += os.pathsep + str(self.ffmpeg_path)
+        self.ffmpeg_dir = _resolve_ffmpeg_directory()
+        self.has_system_ffmpeg = _ffmpeg_tools_on_path()
+
+        if self.ffmpeg_dir is not None:
+            os.environ["PATH"] += os.pathsep + str(self.ffmpeg_dir)
 
     def run(self):   
+        if self.ffmpeg_dir is None and not self.has_system_ffmpeg:
+            self.finished_signal.emit(
+                False,
+                Path(),
+                "FFmpeg and ffprobe were not found. Install them and add them to PATH, or place ffmpeg.exe and ffprobe.exe in the SplitIT/ffmpeg folder.",
+            )
+            return
+
         
         ydl_opts = {
-            'ffmpeg_location':f'{str(ffmpeg_path.absolute())}',
             'format': 'bestaudio/best[ext=webm]',
             'outtmpl': f"{self.save_path}\\tempfile.tmp",
             
@@ -49,8 +75,10 @@ class DownloadThread(QThread):
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'wav',
                 
-            }]
+                }]
                 }
+        if self.ffmpeg_dir is not None:
+            ydl_opts['ffmpeg_location'] = str(self.ffmpeg_dir)
         eval = None
         pth = None
         opth = None
@@ -74,20 +102,11 @@ class DownloadThread(QThread):
                     Path(dl_path).unlink()
 
                 print('self.out_path 77777777777777777 ' + str(self.out_path))
-                self.finished_signal.emit(True,  self.out_path)
+                self.finished_signal.emit(True,  self.out_path, "")
         except Exception as e:
-            traceback.print_exc()               
-            if not os.path.exists(self.out_path):
-                stem_name = Path(self.out_path).stem
-                real_location = self.out_path.parent / Path(stem_name)/Path(stem_name).with_suffix('.wav')
-                if not Path(real_location.parent).exists():
-                    os.makedirs(real_location.parent)
-                if real_location.exists():
-                    self.out_path.unlink()    
-                else:
-                    shutil.move(self.out_path,real_location)
+            traceback.print_exc()
             print(self.out_path, '---------------')
-            self.finished_signal.emit(False, Path())
+            self.finished_signal.emit(False, Path(), str(e))
 
 
 

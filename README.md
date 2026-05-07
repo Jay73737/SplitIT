@@ -84,3 +84,74 @@ python main.py
 - Developed by Justin Hild
 - Thanks to [Demucs](https://github.com/adefossez/demucs/tree/main) for creating the audio models and inspiring me to continue working on getting better quality data out.
 - Thanks also to [yt_dlp]([https://github.com/username/projec](https://github.com/yt-dlp/yt-dlp)t) for making pulling in sources to test on much easier.
+
+## Web Deployment (VPS)
+
+This repo now includes a web deployment path:
+
+- `backend/app.py` runs FastAPI endpoints for file upload, stem split jobs, and zip download.
+- `frontend/` is a browser UI that submits jobs to the API.
+- `deploy/splitit-api.service` and `deploy/nginx-splitit.conf` are production templates.
+
+### Local run (web mode)
+
+In one terminal:
+
+```powershell
+cd backend
+pip install -r ..\requirements.txt
+pip install -r requirements-web.txt
+uvicorn app:app --reload --host 0.0.0.0 --port 8000
+```
+
+In a second terminal:
+
+```powershell
+cd frontend
+npm install
+$env:REACT_APP_API_BASE="http://localhost:8000"
+npm run start
+```
+
+### Deploy to Linux VPS
+
+1. Clone repo into `/opt/splitit`.
+2. Create venv and install dependencies:
+
+```bash
+cd /opt/splitit
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+pip install -r backend/requirements-web.txt
+```
+
+3. Build frontend:
+
+```bash
+cd /opt/splitit/frontend
+npm ci
+npm run build
+mkdir -p /var/www/splitit
+cp -r dist/* /var/www/splitit/
+```
+
+4. Install systemd service:
+
+```bash
+cp /opt/splitit/deploy/splitit-api.service /etc/systemd/system/splitit-api.service
+systemctl daemon-reload
+systemctl enable --now splitit-api
+systemctl status splitit-api
+```
+
+5. Install Nginx config:
+
+```bash
+cp /opt/splitit/deploy/nginx-splitit.conf /etc/nginx/sites-available/splitit
+ln -sf /etc/nginx/sites-available/splitit /etc/nginx/sites-enabled/splitit
+nginx -t
+systemctl reload nginx
+```
+
+After this, open `http://YOUR_SERVER_IP` in a browser.

@@ -43,6 +43,7 @@ class MainGUI(QWidget):
         self.armed = False
         self.selected_instruments = []
         self.dots = 0
+        self.compute_device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
         
         
@@ -82,18 +83,14 @@ class MainGUI(QWidget):
         self.filepath = ""
         self.split_ind = 1
         try:
-            with open(Path(__file__).parent / 'config.json', 'r') as f:
-                self.config_params = json.load(f)
-            
-                key = self.config_params['api_key']
-            
+            key = self.config_params.get('api_key', '')
+            if not key:
+                api_window = APIKeyWindow(self)
+                api_window.finished.connect(self._save_api)
+                api_window.show()
+                api_window.exec()
         except:
             traceback.print_exc()
-            api_window = APIKeyWindow(self)
-            self._load_config('config')
-            api_window.finished.connect(self._save_api)
-            api_window.show()
-            result = api_window.exec()
         self._setup_ui()
 
     def _save_api(self, api_key):
@@ -101,24 +98,33 @@ class MainGUI(QWidget):
         self.config_params['api_key'] = api_key
         self._save_config('config.json', self.config_params)
 
+    def _config_path(self, path='config.json'):
+        path_obj = Path(path)
+        if not path_obj.is_absolute():
+            return Path(__file__).parent / path_obj
+        return path_obj
+
     def _load_config(self, path):
-        if os.path.exists(path):
-            with open(path, "r") as f:
+        config_path = self._config_path(path)
+        if config_path.exists():
+            with open(config_path, "r", encoding="utf-8") as f:
                 self.config_params = json.load(f)
                 return self.config_params
         else:
             self.config_params = {
                 "api_key": "",
                 "cache": {
-                    "last_file_path_downloader": Path(__file__),
-                    "last_file_path_splitter": Path(__file__),
+                    "last_file_path_downloader": str(Path(__file__).parent),
+                    "last_file_path_splitter": str(Path(__file__).parent),
                     "sources": []
                 }
             }
+            self._save_config(config_path, self.config_params)
             return self.config_params
 
-    def _save_config(path, config):
-        with open(path, "w") as f:
+    def _save_config(self, path, config):
+        config_path = self._config_path(path)
+        with open(config_path, "w", encoding="utf-8") as f:
             json.dump(config, f, indent=4)
 
 
@@ -284,14 +290,19 @@ class MainGUI(QWidget):
         self.shift_label.setToolTip("This will run the model multiple times with a random .5 second shift. \nThis will multiply the splitting time by this number.")
 
         
-        cuda = False
-        
+        self.gpu_checkbox = QCheckBox("Use GPU", self)
+        self.gpu_checkbox.clicked.connect(self._check_cuda_devices)
         if torch.cuda.is_available():
-            cuda = True
-            self.gpu_checkbox = QCheckBox(f"Use GPU {torch.cuda.get_device_name(0)}", self)
+            self.gpu_checkbox.setText(f"Use GPU: {torch.cuda.get_device_name(0)}")
             self.gpu_checkbox.setChecked(True)
-            self.gpu_checkbox.clicked.connect(self._check_cuda_devices)
-            self.gpu_checkbox.setToolTip("Dramatically reduces split time, but uses a lot of GPU resources.")      
+            self.gpu_checkbox.setEnabled(True)
+            self.gpu_checkbox.setToolTip("Dramatically reduces split time, but uses a lot of GPU resources.")
+        else:
+            self.gpu_checkbox.setText("Use GPU (CUDA unavailable)")
+            self.gpu_checkbox.setChecked(False)
+            self.gpu_checkbox.setEnabled(False)
+            self.compute_device = "cpu"
+            self.gpu_checkbox.setToolTip(self._cuda_unavailable_reason())
         
         spinbox_layout = QHBoxLayout()
         spinbox_layout.addWidget(self.overlap_label)
@@ -315,8 +326,7 @@ class MainGUI(QWidget):
         self.model_group.setStyleSheet("myFrame { border: 2px solid #888; border-radius: 6px; background-color: transparent; }" )
         
     
-        if cuda:
-            self.stem_layout.addWidget(self.gpu_checkbox)    
+        self.stem_layout.addWidget(self.gpu_checkbox)
         stems_box.addLayout(self.model_checkboxes_layout)
         self.model_group.setLayout(stems_box)
         self.stem_layout.addWidget(self.model_group)
@@ -383,6 +393,16 @@ class MainGUI(QWidget):
     def _update_overlap_stem(self, value):
         self.overlap_label.setText(f"Overlap {(value/100):.2f} sec ({str(int((value/100)*44100))} steps)")
 
+    def _cuda_unavailable_reason(self):
+        try:
+            if torch.version.cuda is None:
+                return "CUDA is unavailable because this PyTorch build is CPU-only. Install a CUDA-enabled torch build."
+            if torch.cuda.device_count() == 0:
+                return "CUDA runtime is present, but no CUDA-capable GPU was detected by PyTorch."
+            return "CUDA is unavailable in the current Python environment."
+        except Exception as exc:
+            return f"CUDA check failed: {exc}"
+
     # Checks if cuda is available and if so, opens a dialog to select which device you want to use
     def _check_cuda_devices(self):
         if self.gpu_checkbox.isChecked():
@@ -390,15 +410,22 @@ class MainGUI(QWidget):
                 if torch.cuda.device_count() > 1:
                     cuda_prompt = CudaDeviceDialog(self)
                     cuda_prompt.setWindowTitle("Select CUDA Device")
-                    cuda_prompt.device.connect(lambda _,device: self.gpu_checkbox.setText(f"Using GPU: {device}"))
+                    cuda_prompt.device.connect(self._set_cuda_device)
                     cuda_prompt.exec()
                 else:
                     self.gpu_checkbox.setText(f"Use GPU: {torch.cuda.get_device_name(0)}")
+                    self.compute_device = "cuda:0"
             else:
                 QMessageBox.warning(self, "No GPU", "CUDA is not available. The GPU will not be used for processing.")
                 self.gpu_checkbox.setChecked(False)
+                self.compute_device = "cpu"
         else:
             QMessageBox.information(self, "GPU Disabled", "The GPU will not be used for processing.")
+            self.compute_device = "cpu"
+
+    def _set_cuda_device(self, device_index, device_name):
+        self.compute_device = f"cuda:{device_index}"
+        self.gpu_checkbox.setText(f"Using GPU: {device_name}")
 
     # When a stem checkbox is clicked, this updates the models that are available for those stems (eg. guitar and piano are only on htdemucs_6s)
     def _on_checkbox_state_changed(self):
@@ -650,7 +677,11 @@ class MainGUI(QWidget):
             self.armed = False
 
 
-        self.progress_label.setText(f"{self._working_string()}\n                               {str(percent_done)}% || Pass {self.current_shift}/{str(self.shfts)}                            ")
+        status_text = message if message else self._working_string()
+        self.progress_label.setText(
+            f"{status_text}\n"
+            f"{str(percent_done)}% || Pass {self.current_shift}/{str(self.shfts)}"
+        )
         self.progress_bar.setValue(int(percent_done))   
 
     # Called when the Split button is pressed, creates as new thread to split stems
@@ -677,7 +708,18 @@ class MainGUI(QWidget):
         info = self._get_models()
         self.shift_label.setVisible(True)
         if info is not None:
-            self.splitter = StemSplitter(info[0],sorted(info[1]), self.filepath, shifts=self.shift_spinbox.value(), keep_all=False, overlap=float(self.overlap_slider.value()*1.5/100))
+            device = "cpu"
+            if hasattr(self, "gpu_checkbox") and self.gpu_checkbox.isChecked() and torch.cuda.is_available():
+                device = self.compute_device
+            self.splitter = StemSplitter(
+                info[0],
+                sorted(info[1]),
+                self.filepath,
+                shifts=self.shift_spinbox.value(),
+                keep_all=False,
+                overlap=float(self.overlap_slider.value()*1.5/100),
+                device=device,
+            )
             self.splitter.progress.connect(self._update_progress)
             self.splitter.finished.connect(self._split_complete)
             
@@ -688,7 +730,7 @@ class MainGUI(QWidget):
 
     
     # Runs when the download is finished.  Converts the .webm file to a .wav file with ffmpeg, then sets the downloaded song box to the downloaded file
-    def _download_complete(self,valid,  file_path: Path):
+    def _download_complete(self,valid,  file_path: Path, error_message: str = ""):
         file = str(file_path.absolute())
         if valid:
             if file_path.suffix != '.wav':
@@ -708,9 +750,10 @@ class MainGUI(QWidget):
             self.split_stems_file.setText(f"Loaded File: {file}")
             self.progress_bar.hide()
         else:
-            
+            self.progress_bar.hide()
+            message = error_message or 'The downloader did not return a valid audio file.'
             print('didnt get a valid file back from downloader')
-            raise FileNotFoundError()
+            QMessageBox.critical(self, 'Download Error', message)
 
     
     

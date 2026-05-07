@@ -1,6 +1,6 @@
 
 import os
-from _demucs.apply import get_progress
+from _demucs.apply import get_progress, BagOfModels
 from _demucs.api import Separator, save_audio
 from _demucs.audio import f32_pcm
 import torch
@@ -55,9 +55,11 @@ class StemSplitter(QThread):
     progress = pyqtSignal(str, int)
     get_args = pyqtSignal(list)
 
-    def __init__(self,model, instruments, file_path, shifts=1, keep_all=False, overlap=.5 ):
+    def __init__(self,model, instruments, file_path, shifts=1, keep_all=False, overlap=.5, device=None ):
         super().__init__()
         sys.path.insert(0, Path(__file__).parent)
+        requested_device = device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = self._resolve_device(requested_device)
         self.sources_list = ['guitar', 'bass', 'drums', 'vocals', 'other']
         self.stem = None
         self.shifts = shifts
@@ -69,13 +71,13 @@ class StemSplitter(QThread):
                 
                 temp_model.insert(0,'mdx_extra')
             temp_model.remove('combo')
-            self.models = [Separator(m, shifts = shifts, split=True, overlap = overlap,progress=True) for m in temp_model]
-            self.guitar_models = Separator('htdemucs_6s', shifts=shifts, split=True, overlap=.75, progress=True)
+            self.models = [Separator(m, shifts = shifts, split=True, overlap = overlap,progress=True, device=self.device) for m in temp_model]
+            self.guitar_models = Separator('htdemucs_6s', shifts=shifts, split=True, overlap=.75, progress=True, device=self.device)
             self.model_names = temp_model 
             if 'other' not in instruments:
                 instruments.append('other')
         else:
-            self.models = [Separator(m, shifts = shifts, split=True, overlap = overlap,progress=True) for m in model]
+            self.models = [Separator(m, shifts = shifts, split=True, overlap = overlap,progress=True, device=self.device) for m in model]
             self.model_names = model        
         self.instruments = [inst.lower() for inst in sorted(instruments) if inst.lower()]        
         self.file_path =Path(file_path)
@@ -85,14 +87,74 @@ class StemSplitter(QThread):
 
         self.keep_all = keep_all
         self.ext = Path(file_path).suffix
+        self.current_status = f"Preparing separation on {self.device}..."
+        self._active_separator_name = ""
+
+        for separator in self.models:
+            self._prune_bag_for_sources(separator, self.instruments)
+        if self.guitar_models is not None:
+            self._prune_bag_for_sources(self.guitar_models, ['guitar', 'other'])
+
+    @staticmethod
+    def _resolve_device(requested_device):
+        requested = str(requested_device)
+        if requested.startswith("cuda"):
+            if not torch.cuda.is_available():
+                print("CUDA requested but torch.cuda.is_available() is False. Falling back to CPU.")
+                return "cpu"
+            try:
+                torch.empty(1, device=requested)
+            except Exception as exc:
+                print(f"Failed to initialize CUDA device '{requested}': {exc}. Falling back to CPU.")
+                return "cpu"
+        return requested
+
+    @staticmethod
+    def _prune_bag_for_sources(separator, requested_sources):
+        # For one-hot weighted bags like htdemucs_ft, this can skip irrelevant submodels.
+        model = separator.model
+        if not isinstance(model, BagOfModels):
+            return
+        source_set = set(requested_sources)
+        kept_models = []
+        kept_weights = []
+        for sub_model, model_weights in zip(model.models, model.weights):
+            contributes = any(
+                (src in source_set) and (weight != 0)
+                for src, weight in zip(model.sources, model_weights)
+            )
+            if contributes:
+                kept_models.append(sub_model)
+                kept_weights.append(model_weights)
+
+        if kept_models and len(kept_models) < len(model.models):
+            model.models = torch.nn.ModuleList(kept_models)
+            model.weights = kept_weights
         
 
 
     def run(self):
         self._split_stems(self.file_path)
+
+    def _separation_callback(self, callback_data):
+        bag_models = int(callback_data.get('models', 1))
+        bag_index = int(callback_data.get('model_idx_in_bag', 0)) + 1
+        shift_index = int(callback_data.get('shift_idx', 0)) + 1
+
+        stem_text = ", ".join(self.instruments) if self.instruments else "all stems"
+        if bag_models > 1:
+            self.current_status = (
+                f"{self._active_separator_name}: bag model {bag_index}/{bag_models} "
+                f"(targeting {stem_text}, shift {shift_index}/{self.shifts})"
+            )
+        else:
+            self.current_status = (
+                f"{self._active_separator_name}: separating {stem_text} "
+                f"(shift {shift_index}/{self.shifts})"
+            )
     
     def _get_progress_hook(self):
-        self.progress.emit("good ",int(get_progress()))
+        self.progress.emit(self.current_status, int(get_progress()))
 
     
     def _stems_exist(self, file_path, model):
@@ -135,6 +197,9 @@ class StemSplitter(QThread):
             if self._stems_exist(file_path, self.model_names[i]):
                 print(f"Stems already exist for model {self.model_names[i]}, skipping...")
                 continue
+            self._active_separator_name = self.model_names[i]
+            self.current_status = f"{self._active_separator_name}: loading audio..."
+            m.update_parameter(callback=self._separation_callback, callback_arg={})
             origin, stems = m.separate_audio_file(file_path)
             items = []
             print(type(stems))
@@ -175,9 +240,11 @@ class StemSplitter(QThread):
 class StemSplitterSingle():
     
 
-    def __init__(self,model, instruments, file_path, shifts=1, keep_all=False, overlap=.5 ):
+    def __init__(self,model, instruments, file_path, shifts=1, keep_all=False, overlap=.5, device=None ):
         
         sys.path.insert(0, Path(__file__).parent)
+        requested_device = device if device is not None else ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = StemSplitter._resolve_device(requested_device)
         self.sources_list = ['guitar', 'bass', 'drums', 'vocals', 'other']
         self.stem = None
         self.shifts = shifts
@@ -188,13 +255,13 @@ class StemSplitterSingle():
                 
                 temp_model.insert(0,'mdx_extra')
             temp_model.remove('combo')
-            self.models = [Separator(m, shifts = shifts, split=True, overlap = overlap,progress=True) for m in temp_model]
-            self.guitar_models = Separator('htdemucs_6s', shifts=shifts, split=True, overlap=.75, progress=True)
+            self.models = [Separator(m, shifts = shifts, split=True, overlap = overlap,progress=True, device=self.device) for m in temp_model]
+            self.guitar_models = Separator('htdemucs_6s', shifts=shifts, split=True, overlap=.75, progress=True, device=self.device)
             self.model_names = temp_model 
             if 'other' not in instruments:
                 instruments.append('other')
         else:
-            self.models = [Separator(m, shifts = shifts, split=True, overlap = overlap,progress=True) for m in model]
+            self.models = [Separator(m, shifts = shifts, split=True, overlap = overlap,progress=True, device=self.device) for m in model]
             self.model_names = model        
         self.instruments = [inst.lower() for inst in sorted(instruments) if inst.lower()]        
         self.file_path =Path(file_path)
@@ -202,6 +269,33 @@ class StemSplitterSingle():
 
         self.keep_all = keep_all
         self.ext = Path(file_path).suffix
+
+        for separator in self.models:
+            self._prune_bag_for_sources(separator, self.instruments)
+        if self.guitar_models is not None:
+            self._prune_bag_for_sources(self.guitar_models, ['guitar', 'other'])
+
+    @staticmethod
+    def _prune_bag_for_sources(separator, requested_sources):
+        # For one-hot weighted bags like htdemucs_ft, this can skip irrelevant submodels.
+        model = separator.model
+        if not isinstance(model, BagOfModels):
+            return
+        source_set = set(requested_sources)
+        kept_models = []
+        kept_weights = []
+        for sub_model, model_weights in zip(model.models, model.weights):
+            contributes = any(
+                (src in source_set) and (weight != 0)
+                for src, weight in zip(model.sources, model_weights)
+            )
+            if contributes:
+                kept_models.append(sub_model)
+                kept_weights.append(model_weights)
+
+        if kept_models and len(kept_models) < len(model.models):
+            model.models = torch.nn.ModuleList(kept_models)
+            model.weights = kept_weights
         
 
 

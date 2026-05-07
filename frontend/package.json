@@ -1,0 +1,74 @@
+{
+  "name": "splitit-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "main": "electron.js",
+  "scripts": {
+    "start": "parcel public/index.html --port 1234",
+    "build": "parcel build public/index.html --dist-dir dist --public-url ./",
+    "electron": "electron electron.js",
+    "dev": "concurrently \"npm.cmd run start\" \"wait-on tcp:1234 && electron electron.js\"",
+    "backend:cpu": "python ../backend/build_backend.py --flavor cpu",
+    "backend:cuda": "python ../backend/build_backend.py --flavor cuda",
+    "pack": "npm run build && electron-builder --dir",
+    "dist": "npm run build && electron-builder",
+    "dist:cpu": "npm run backend:cpu && npm run build && cross-env SPLITIT_FLAVOR=cpu electron-builder",
+    "dist:cuda": "npm run backend:cuda && npm run build && cross-env SPLITIT_FLAVOR=cuda electron-builder"
+  },
+  "dependencies": {
+    "@tsamantanis/react-glassmorphism": "^1.1.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^30.5.1",
+    "electron-builder": "^25.1.8",
+    "parcel": "^2.12.0",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.splitit.app",
+    "productName": "SplitIT",
+    "artifactName": "${productName}-${env.SPLITIT_FLAVOR}-${version}.${ext}",
+    "files": [
+      "electron.js",
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/backend",
+        "to": "backend",
+        "filter": [
+          "**/*"
+        ]
+      }
+    ],
+    "directories": {
+      "output": "release",
+      "buildResources": "build"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.ico",
+      "category": "public.app-category.music"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.ico",
+      "category": "AudioVideo"
+    }
+  }
+}

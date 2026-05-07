@@ -246,10 +246,10 @@ class CudaDeviceDialog(QDialog):
 
     def accept_prompt(self):
         selected_device = self.btn_group.checkedId()
-        if selected_device:
+        if selected_device < 0:
             QMessageBox.warning(self, "No Device Selected", "Please select at least one CUDA device.")
             return
-        self.device.emit(self.btn_group.button(selected_device), torch.cuda.get_device_name(self.btn_group.button(selected_device)))
+        self.device.emit(selected_device, torch.cuda.get_device_name(selected_device))
         self.accept()
 
     

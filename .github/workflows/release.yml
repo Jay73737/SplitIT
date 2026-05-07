@@ -1,0 +1,111 @@
+name: Build & Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      attach_to_release:
+        description: "Also create a draft GitHub Release? (only set true on tagged builds)"
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write   # needed by softprops/action-gh-release
+
+jobs:
+  build:
+    name: ${{ matrix.os }} / ${{ matrix.flavor }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            flavor: cpu
+            installer_glob: "frontend/release/*.exe"
+          - os: windows-latest
+            flavor: cuda
+            installer_glob: "frontend/release/*.exe"
+          - os: macos-latest
+            flavor: cpu
+            installer_glob: "frontend/release/*.dmg"
+          - os: ubuntu-latest
+            flavor: cpu
+            installer_glob: "frontend/release/*.AppImage"
+          - os: ubuntu-latest
+            flavor: cuda
+            installer_glob: "frontend/release/*.AppImage"
+
+    env:
+      SPLITIT_FLAVOR: ${{ matrix.flavor }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Linux - install AppImage build deps
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y libfuse2 libsndfile1
+
+      - name: Freeze backend (${{ matrix.flavor }})
+        run: python backend/build_backend.py --flavor ${{ matrix.flavor }}
+
+      - name: Install frontend deps
+        working-directory: frontend
+        run: npm ci --legacy-peer-deps
+
+      - name: Build frontend bundle
+        working-directory: frontend
+        run: npm run build
+
+      - name: Run electron-builder
+        working-directory: frontend
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No code-signing certs configured. electron-builder will produce
+          # unsigned installers; users will see SmartScreen / Gatekeeper warnings.
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: npx electron-builder --publish=never
+
+      - name: Upload installer as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SplitIT-${{ matrix.os }}-${{ matrix.flavor }}
+          path: ${{ matrix.installer_glob }}
+          if-no-files-found: error
+
+  release:
+    name: Draft GitHub Release
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/v') || inputs.attach_to_release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all installers
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Create / update draft release
+        uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          generate_release_notes: true
+          files: artifacts/**/*

@@ -1,19 +1,142 @@
 
-html {
+:root {
+  --bg-1: #04141f;
+  --bg-2: #15364a;
+  --bg-3: #24706d;
+  --card: rgba(7, 25, 38, 0.84);
+  --line: rgba(130, 225, 186, 0.28);
+  --text: #ecfff5;
+  --muted: #b8d5ca;
+  --accent: #80ffba;
+  --error: #ff9b9b;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
   margin: 0;
-  height: 100%;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  min-height: 100%;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+  color: var(--text);
 }
 
 body {
-  margin: 0;
-  height: 100%;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(128, 255, 186, 0.16), transparent 40%),
+    radial-gradient(circle at 80% 10%, rgba(79, 241, 255, 0.2), transparent 35%),
+    linear-gradient(130deg, var(--bg-1), var(--bg-2) 55%, var(--bg-3));
+}
+
+.page-shell {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.hero-card {
+  width: min(820px, 100%);
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(6px);
+  animation: reveal 0.55s ease-out;
+}
+
+.hero-card h1 {
+  margin: 0;
+  font-size: clamp(1.7rem, 2.6vw, 2.4rem);
+  letter-spacing: 0.5px;
+}
+
+.hero-card p {
+  margin: 8px 0 0;
+  color: var(--muted);
+}
+
+.split-form {
+  margin-top: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.95rem;
+}
+
+input,
+select,
+button {
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  padding: 10px 12px;
+  background: rgba(6, 29, 34, 0.72);
+  color: var(--text);
+  font-size: 0.95rem;
+}
+
+button {
+  cursor: pointer;
+  background: linear-gradient(92deg, #56e18f, #6de8f2);
+  color: #072015;
+  border: none;
+  font-weight: 700;
+}
+
+button:hover {
+  filter: brightness(1.05);
+}
+
+.inline-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.status-box {
+  margin-top: 16px;
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.status-box p {
+  margin: 6px 0;
+}
+
+.status-box a {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.error-text {
+  color: var(--error);
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 640px) {
+  .hero-card {
+    padding: 18px;
+  }
+
+  .inline-grid {
+    grid-template-columns: 1fr;
+  }
 }
