@@ -297,8 +297,9 @@ def apply_model(model: tp.Union[BagOfModels, Model],
         for future, offset in futures:
             try:
                 chunk_out = future.result()
-                progresslabel = futures.n
-                progtotal = futures.total
+                if hasattr(futures, "n") and hasattr(futures, "total"):
+                    progresslabel = futures.n
+                    progtotal = futures.total
             except Exception:
                 pool.shutdown(wait=True, cancel_futures=True)
                 raise

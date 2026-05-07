@@ -2,14 +2,13 @@ import React, { useState } from "react";
 import usePlaceholderCycle from "./PlaceholderCycler.jsx";
 import * as styles from "./SearchBar.module.css";              
 
-export default function SearchBar({ onSearch }) {
+export default function SearchBar({ onSearch, isRunning }) {
   const [value, setValue] = useState("");
 
-  
   const placeholder = usePlaceholderCycle([
-    "Drop in a file…",
-    "Paste a URL…",
-    "Type and search…",
+    "Search YouTube for a track...",
+    "Find a song, then split it...",
+    "Paste a title, artist, or URL hint...",
   ]);
 
   const handleSubmit = (e) => {
@@ -25,6 +24,9 @@ export default function SearchBar({ onSearch }) {
         onChange={(e) => setValue(e.target.value)}
         placeholder={placeholder}
       />
+      <button className={styles.submitButton} type="submit" disabled={isRunning || !value.trim()}>
+        {isRunning ? "Searching..." : "Search"}
+      </button>
     </form>
   );
 }

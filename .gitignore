@@ -1,11 +1,16 @@
 
 /__pycache__/
-/config.json
+**/__pycache__/
 **/__pycahce__/
+/config.json
 *.wav
 /ffmpeg/
 /SplitMe/
 /_demucs/__pycache__/
+
+# Virtual environments
+/.venv/
+/.venv-linux/
 
 # Backend freeze artifacts
 /backend/build/
@@ -26,6 +31,8 @@ bigkey*
 *.key
 id_rsa
 id_ed25519
+yt_cookies.txt
+*.txt.bak
 
 # Audio output (Ableton analysis sidecars; *.wav already ignored above)
 *.asd

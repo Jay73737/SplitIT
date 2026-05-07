@@ -1,11 +1,12 @@
 .panel {
-  width: 880px;
+  width: min(1100px, 92vw);
   margin-top: 24px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
-  padding: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 18px;
+  padding: 20px;
   backdrop-filter: blur(30px);
-  background: rgba(0, 0, 0, 0.45);
-  border-radius: 24px;
+  background: rgba(5, 10, 18, 0.52);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
