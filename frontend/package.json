@@ -2,6 +2,12 @@
   "name": "splitit-frontend",
   "version": "1.0.0",
   "private": true,
+  "description": "SplitIT - local audio stem splitter (Demucs + YouTube)",
+  "author": "Jay <jhildz737@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Jay73737/SplitIT.git"
+  },
   "main": "electron.js",
   "targets": {
     "main": false,
@@ -42,6 +48,7 @@
   "build": {
     "appId": "com.splitit.app",
     "productName": "SplitIT",
+    "publish": null,
     "artifactName": "${productName}-${env.SPLITIT_FLAVOR}-${version}.${ext}",
     "files": [
       "electron.js",
