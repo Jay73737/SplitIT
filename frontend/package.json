@@ -3,6 +3,17 @@
   "version": "1.0.0",
   "private": true,
   "main": "electron.js",
+  "targets": {
+    "main": false,
+    "module": false,
+    "browser": false,
+    "types": false,
+    "default": {
+      "distDir": "dist",
+      "publicUrl": "./",
+      "context": "browser"
+    }
+  },
   "scripts": {
     "start": "parcel public/index.html --port 1234",
     "build": "parcel build public/index.html --dist-dir dist --public-url ./",
@@ -10,10 +21,10 @@
     "dev": "concurrently \"npm.cmd run start\" \"wait-on tcp:1234 && electron electron.js\"",
     "backend:cpu": "python ../backend/build_backend.py --flavor cpu",
     "backend:cuda": "python ../backend/build_backend.py --flavor cuda",
-    "pack": "npm run build && electron-builder --dir",
-    "dist": "npm run build && electron-builder",
-    "dist:cpu": "npm run backend:cpu && npm run build && cross-env SPLITIT_FLAVOR=cpu electron-builder",
-    "dist:cuda": "npm run backend:cuda && npm run build && cross-env SPLITIT_FLAVOR=cuda electron-builder"
+    "pack": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder --dir",
+    "dist": "npm run build && cross-env CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+    "dist:cpu": "npm run backend:cpu && npm run build && cross-env SPLITIT_FLAVOR=cpu CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder",
+    "dist:cuda": "npm run backend:cuda && npm run build && cross-env SPLITIT_FLAVOR=cuda CSC_IDENTITY_AUTO_DISCOVERY=false electron-builder"
   },
   "dependencies": {
     "@tsamantanis/react-glassmorphism": "^1.1.4",
@@ -34,6 +45,7 @@
     "artifactName": "${productName}-${env.SPLITIT_FLAVOR}-${version}.${ext}",
     "files": [
       "electron.js",
+      "preload.js",
       "dist/**/*",
       "package.json"
     ],
@@ -52,7 +64,7 @@
     },
     "win": {
       "target": "nsis",
-      "icon": "build/icon.ico"
+      "signAndEditExecutable": false
     },
     "nsis": {
       "oneClick": false,
@@ -62,12 +74,10 @@
     },
     "mac": {
       "target": "dmg",
-      "icon": "build/icon.ico",
       "category": "public.app-category.music"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "build/icon.ico",
       "category": "AudioVideo"
     }
   }

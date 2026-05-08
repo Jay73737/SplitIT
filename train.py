@@ -62,8 +62,8 @@ def get_all_files(root_dir):
 
 file_dict = {}
 
-data_path=Path(r'D:\moisesdb\moisesdb\moisesdb_v0.1')
-output_path=Path(r'c:\Users\justm\Desktop\dataset\proper')
+data_path = Path(os.environ.get("MOISESDB_PATH") or r"D:\moisesdb\moisesdb\moisesdb_v0.1")
+output_path = Path(os.environ.get("DATASET_OUTPUT_PATH") or (Path.home() / "splitit-dataset" / "proper"))
 if not output_path.exists():
     os.makedirs(output_path)
 t = get_all_files(data_path)
@@ -189,7 +189,8 @@ def find_empty_dirs(root):
         return empty_dirs
 
 #combine_audios(data_path)
-t = find_empty_dirs(r'C:\Users\justm\Desktop\dataset\moisesdb\moisesdb_v0.1')
+_empty_scan_path = os.environ.get("MOISESDB_PATH") or r"D:\moisesdb\moisesdb\moisesdb_v0.1"
+t = find_empty_dirs(_empty_scan_path)
 
 #@forrename_directories_sequentially(data_path)  stems dir_paths, dir_names, files f.sos.walk(data_path)path = print(dir_names,dir_paths, files)taset\train",['vocals', 'guitar', 'bass', 'drums', 'other'],normalize=True, ext='.wav')
 valid = wav.build_metadata(r"d:\dataset\dataset\valid",['vocals', 'guitar', 'bass', 'drums', 'other'], ext='.wav')

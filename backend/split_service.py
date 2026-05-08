@@ -12,7 +12,39 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 if str(ROOT_DIR) not in sys.path:
     sys.path.insert(0, str(ROOT_DIR))
 
-from _demucs.api import Separator, save_audio
+
+def _alias_demucs_to_vendored() -> None:
+    """The vendored _demucs/ package cross-references the upstream `demucs` name
+    (e.g. `from demucs.states import capture_init`). Alias `demucs.X` →
+    `_demucs.X` in sys.modules so those imports resolve to the vendored copy.
+    Must run before any `from _demucs.X import ...` triggers the chain."""
+    import importlib
+
+    try:
+        _demucs = importlib.import_module("_demucs")
+    except ImportError:
+        return
+    sys.modules.setdefault("demucs", _demucs)
+    # Inference-time submodules only. Training-only modules (repitch, wav, augment,
+    # automix, solver, train, evaluate) are skipped - they have heavy side effects
+    # at import time (eg repitch hardcodes a temp dir) and the inference path
+    # doesn't need them.
+    for submod in (
+        "states", "utils", "transformer", "demucs", "hdemucs",
+        "spec", "audio", "pretrained", "apply", "api",
+    ):
+        try:
+            sys.modules.setdefault(
+                f"demucs.{submod}",
+                importlib.import_module(f"_demucs.{submod}"),
+            )
+        except Exception:  # noqa: BLE001 - swallow any side-effect crash
+            pass
+
+
+_alias_demucs_to_vendored()
+
+from _demucs.api import Separator, save_audio  # noqa: E402 - must follow alias
 
 
 def _normalize_instruments(instruments: Iterable[str]) -> list[str]:

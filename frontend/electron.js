@@ -1,7 +1,20 @@
-const { app, BrowserWindow, dialog } = require("electron");
+const { app, BrowserWindow, dialog, ipcMain, nativeImage } = require("electron");
 const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
+
+// Tiny 16x16 transparent PNG used as the cursor preview when dragging stems
+// out to the OS. webContents.startDrag requires a non-null icon.
+const DRAG_ICON_PNG_BASE64 =
+  "iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAEElEQVR42mNkAAIAA" +
+  "AABAAEArcAAAAASUVORK5CYII=";
+
+ipcMain.on("splitit:start-drag", (event, filePath) => {
+  if (typeof filePath !== "string" || !filePath) return;
+  if (!fs.existsSync(filePath)) return;
+  const icon = nativeImage.createFromBuffer(Buffer.from(DRAG_ICON_PNG_BASE64, "base64"));
+  event.sender.startDrag({ file: filePath, icon });
+});
 
 const isDev = process.env.NODE_ENV === "development" || !app.isPackaged;
 
@@ -116,14 +129,16 @@ async function createWindow() {
 
   mainWindow = new BrowserWindow({
     width: 900,
-    height: 78,
-    frame: false,
-    transparent: true,
-    resizable: false,
-    hasShadow: false,
+    height: 720,
+    minWidth: 720,
+    minHeight: 520,
+    frame: true,
+    backgroundColor: "#0f2027",
+    title: "SplitIT",
     webPreferences: {
       contextIsolation: true,
       nodeIntegration: false,
+      preload: path.join(__dirname, "preload.js"),
     },
   });
 
@@ -133,7 +148,7 @@ async function createWindow() {
 
   mainWindow.loadURL(buildRendererUrl(apiBase));
 
-  if (isDev) {
+  if (isDev || process.env.SPLITIT_DEVTOOLS === "1") {
     mainWindow.webContents.openDevTools({ mode: "detach" });
   }
 }

@@ -90,14 +90,23 @@ class Mixer(QThread):
             next_output = t_ss.run()
             
 
-audio1, sr1 = sf.read(r'C:\Users\justm\Desktop\SplitIt\SplitMe\SplitMe\Eagles - Hotel California (Official Audio)\Eagles - Hotel California\guitar.wav')
-audio2, sr2 = sf.read(r'C:\Users\justm\Desktop\SplitIt\other_average\guitar.wav')
-other, sro = sf.read(r"C:\Users\justm\Desktop\SplitIt\SplitMe\SplitMe\Guns N' Roses - Sweet Child O' Mine (Official Music Video)\Guns N' Roses - Sweet Child O' Mine (Official Music Video)\other.wav")
-othermax_val = np.max(np.abs(other)) + .02
-audio2 *= 2
-other /= othermax_val
-other -= audio2
-average = (audio1 + audio2)/2.0
-sf.write('otheravg.wav', other,sr1 )
-sf.write('guitart2.wav', audio2, sr2)
+if __name__ == "__main__":
+    import os
+    # Set MIXER_AUDIO_1 / MIXER_AUDIO_2 / MIXER_AUDIO_OTHER to the input wav paths.
+    audio1_path = os.environ.get("MIXER_AUDIO_1")
+    audio2_path = os.environ.get("MIXER_AUDIO_2")
+    other_path  = os.environ.get("MIXER_AUDIO_OTHER")
+    if not (audio1_path and audio2_path and other_path):
+        raise SystemExit("Mixer.py: set MIXER_AUDIO_1, MIXER_AUDIO_2, MIXER_AUDIO_OTHER env vars")
+
+    audio1, sr1 = sf.read(audio1_path)
+    audio2, sr2 = sf.read(audio2_path)
+    other, sro = sf.read(other_path)
+    othermax_val = np.max(np.abs(other)) + .02
+    audio2 *= 2
+    other /= othermax_val
+    other -= audio2
+    average = (audio1 + audio2)/2.0
+    sf.write('otheravg.wav', other, sr1)
+    sf.write('guitart2.wav', audio2, sr2)
 

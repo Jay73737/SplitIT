@@ -24,6 +24,34 @@ def _pick_free_port() -> int:
         return s.getsockname()[1]
 
 
+_DEMUCS_SUBMODULES = (
+    "states", "utils", "transformer", "demucs", "hdemucs",
+    "spec", "audio", "repitch", "pretrained", "wav", "apply", "api",
+)
+
+
+def _alias_demucs_to_vendored() -> None:
+    """The vendored _demucs/ package has cross-references like
+    `from demucs.states import capture_init` (referencing the upstream package
+    name, not the vendored one). Rather than rewrite the vendored source or
+    pip-install upstream demucs alongside, alias the import name at runtime."""
+    import importlib
+
+    try:
+        _demucs = importlib.import_module("_demucs")
+    except ImportError as exc:
+        sys.stderr.write(f"[alias] could not import _demucs: {exc}\n")
+        return
+    sys.modules["demucs"] = _demucs
+    for submod in _DEMUCS_SUBMODULES:
+        try:
+            mod = importlib.import_module(f"_demucs.{submod}")
+        except Exception as exc:  # noqa: BLE001 - surface the real error
+            sys.stderr.write(f"[alias] _demucs.{submod} failed: {exc!r}\n")
+            continue
+        sys.modules[f"demucs.{submod}"] = mod
+
+
 def main() -> None:
     is_frozen = getattr(sys, "frozen", False)
 
@@ -33,6 +61,11 @@ def main() -> None:
     backend_dir = Path(__file__).resolve().parent
     if str(backend_dir) not in sys.path:
         sys.path.insert(0, str(backend_dir))
+    project_root = backend_dir.parent
+    if str(project_root) not in sys.path:
+        sys.path.insert(0, str(project_root))
+
+    _alias_demucs_to_vendored()
 
     import uvicorn
     from app import app

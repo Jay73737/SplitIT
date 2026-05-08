@@ -13,6 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from split_service import split_audio_file
+import youtube_service
 
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -20,8 +21,9 @@ DATA_DIR = Path(os.environ.get("SPLITIT_DATA_DIR") or (BASE_DIR / "data"))
 UPLOAD_DIR = DATA_DIR / "uploads"
 OUTPUT_DIR = DATA_DIR / "outputs"
 ARCHIVE_DIR = DATA_DIR / "archives"
+YT_DOWNLOAD_DIR = DATA_DIR / "youtube"
 
-for folder in (UPLOAD_DIR, OUTPUT_DIR, ARCHIVE_DIR):
+for folder in (UPLOAD_DIR, OUTPUT_DIR, ARCHIVE_DIR, YT_DOWNLOAD_DIR):
     folder.mkdir(parents=True, exist_ok=True)
 
 
@@ -90,7 +92,13 @@ def _run_job(job_id: str, input_path: Path, models: list[str], instruments: list
 
         archive_base = ARCHIVE_DIR / f"{job_id}"
         archive_file = shutil.make_archive(str(archive_base), "zip", root_dir=output_dir)
-        store.update(job_id, status="completed", download_url=f"/api/jobs/{job_id}/download", archive_file=archive_file)
+        store.update(
+            job_id,
+            status="completed",
+            download_url=f"/api/jobs/{job_id}/download",
+            archive_file=archive_file,
+            stem_dir=str(output_dir),
+        )
     except Exception as exc:
         store.update(job_id, status="failed", error=str(exc))
 
@@ -176,3 +184,115 @@ def download_job(job_id: str):
         raise HTTPException(status_code=404, detail="Archive missing")
 
     return FileResponse(archive_path, media_type="application/zip", filename=f"splitit-{job_id}.zip")
+
+
+def _resolve_stem_path(job: dict, stem_name: str) -> Path:
+    stem_dir = job.get("stem_dir")
+    if not stem_dir:
+        raise HTTPException(status_code=409, detail="Job has no stems available")
+    base = Path(stem_dir).resolve()
+    candidate = (base / f"{stem_name}.wav").resolve()
+    # Defense in depth: never let a crafted stem name escape the stem dir
+    try:
+        candidate.relative_to(base)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid stem name")
+    if not candidate.is_file():
+        raise HTTPException(status_code=404, detail=f"Stem '{stem_name}' not found")
+    return candidate
+
+
+@app.get("/api/jobs/{job_id}/stems")
+def list_stems(job_id: str):
+    job = store.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.get("status") != "completed":
+        raise HTTPException(status_code=409, detail="Job not completed")
+    stem_dir = job.get("stem_dir")
+    if not stem_dir or not Path(stem_dir).is_dir():
+        raise HTTPException(status_code=404, detail="Stem directory missing")
+
+    stems = []
+    for path in sorted(Path(stem_dir).iterdir()):
+        if path.is_file() and path.suffix.lower() == ".wav":
+            stems.append({
+                "name": path.stem,
+                "filename": path.name,
+                "size_bytes": path.stat().st_size,
+                "url": f"/api/jobs/{job_id}/stems/{path.stem}",
+                "local_path": str(path.resolve()),
+            })
+    return {"job_id": job_id, "stems": stems}
+
+
+@app.get("/api/jobs/{job_id}/stems/{stem_name}")
+def stream_stem(job_id: str, stem_name: str):
+    job = store.get(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job.get("status") != "completed":
+        raise HTTPException(status_code=409, detail="Job not completed")
+
+    path = _resolve_stem_path(job, stem_name)
+    return FileResponse(path, media_type="audio/wav", filename=path.name)
+
+
+@app.get("/api/youtube/search")
+def youtube_search(q: str, limit: int = 8):
+    if not q.strip():
+        raise HTTPException(status_code=400, detail="Query is required")
+    try:
+        return {"items": youtube_service.search_youtube(q, limit=limit)}
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"YouTube search failed: {exc}")
+
+
+def _run_youtube_job(job_id: str, video_id: str, models: list[str], instruments: list[str], shifts: int, overlap: float, device: str):
+    try:
+        store.update(job_id, status="downloading")
+        wav_path = youtube_service.download_audio(video_id, YT_DOWNLOAD_DIR)
+        _run_job(job_id, wav_path, models, instruments, shifts, overlap, device)
+    except Exception as exc:
+        store.update(job_id, status="failed", error=str(exc))
+
+
+@app.post("/api/youtube/jobs")
+def create_youtube_job(
+    background_tasks: BackgroundTasks,
+    video_id: str = Form(...),
+    model: str = Form("htdemucs"),
+    instruments: str = Form("vocals,drums,bass,other"),
+    shifts: int = Form(1),
+    overlap: float = Form(0.5),
+    device: str = Form("cuda:0"),
+):
+    if not video_id.strip():
+        raise HTTPException(status_code=400, detail="video_id is required")
+
+    model_names = [m.strip() for m in model.split(",") if m.strip()]
+    instrument_list = [i.strip() for i in instruments.split(",") if i.strip()]
+
+    payload = {
+        "video_id": video_id,
+        "model": model_names,
+        "instruments": instrument_list,
+        "shifts": shifts,
+        "overlap": overlap,
+        "device": device,
+        "source": "youtube",
+    }
+    job_id = store.create(payload)
+
+    background_tasks.add_task(
+        _run_youtube_job,
+        job_id,
+        video_id,
+        model_names,
+        instrument_list,
+        shifts,
+        overlap,
+        device,
+    )
+
+    return {"job_id": job_id, "status_url": f"/api/jobs/{job_id}"}

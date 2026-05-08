@@ -16,14 +16,21 @@ import torchaudio as ta
 from .audio import save_audio
 
 import torchaudio
-torchaudio.set_audio_backend("ffmpeg")
+try:
+    torchaudio.set_audio_backend("ffmpeg")
+except Exception:
+    pass
 import os
-os.environ["PATH"] += os.pathsep + r"C:\Users\justm\Desktop\Code\ytdownloader\src\SplitMe_Jay73737\ffmpeg"
-
 import tempfile
-import os
 
-CUSTOM_TEMP_DIR = r"C:/Users/justm/Desktop/htdemucs_temp"
+# Optional ffmpeg dir override - set DEMUCS_FFMPEG_DIR to point at a folder
+# containing ffmpeg.exe if it isn't already on PATH.
+_extra_ffmpeg = os.environ.get("DEMUCS_FFMPEG_DIR")
+if _extra_ffmpeg and os.path.isdir(_extra_ffmpeg):
+    os.environ["PATH"] += os.pathsep + _extra_ffmpeg
+
+# Custom temp dir, override via DEMUCS_TEMP_DIR; otherwise system temp.
+CUSTOM_TEMP_DIR = os.environ.get("DEMUCS_TEMP_DIR") or tempfile.gettempdir()
 os.makedirs(CUSTOM_TEMP_DIR, exist_ok=True)
 tempfile.tempdir = CUSTOM_TEMP_DIR
 

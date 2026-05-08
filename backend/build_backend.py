@@ -33,14 +33,20 @@ TORCHAUDIO_VERSION = "2.4.1"
 PYINSTALLER_VERSION = "6.10.0"
 
 DEMUCS_RUNTIME_DEPS = [
+    "dora-search",
     "einops",
+    "hydra-core",
     "julius",
     "lameenc",
+    "omegaconf",
     "openunmix",
     "pyyaml",
     "soundfile==0.12.1",
     "numpy==1.26.4",
     "tqdm",
+    "treetable",
+    "yt-dlp",
+    "imageio-ffmpeg",
 ]
 
 
@@ -97,13 +103,23 @@ def install_deps(py: Path) -> None:
     run([str(py), "-m", "pip", "install", f"pyinstaller=={PYINSTALLER_VERSION}"])
 
 
+def _try_clear(path: Path) -> None:
+    """Best-effort directory removal. Windows can hold file handles on the
+    dist tree (Defender, Explorer, leftover smoke-test exe); PyInstaller's
+    own --clean handles the rest."""
+    if not path.exists():
+        return
+    try:
+        shutil.rmtree(path)
+    except (PermissionError, OSError) as exc:
+        log(f"Could not pre-clean {path} ({exc.__class__.__name__}); letting PyInstaller --clean handle it")
+
+
 def freeze(py: Path) -> Path:
     dist = BACKEND_DIR / "dist"
     build = BACKEND_DIR / "build"
-    if dist.exists():
-        shutil.rmtree(dist)
-    if build.exists():
-        shutil.rmtree(build)
+    _try_clear(dist)
+    _try_clear(build)
 
     log("Running PyInstaller")
     run([str(py), "-m", "PyInstaller", "splitit-backend.spec",
@@ -190,15 +206,24 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--flavor", choices=("cpu", "cuda"), default="cpu")
     parser.add_argument("--skip-venv", action="store_true",
-                        help="reuse existing venv if present (faster reruns)")
+                        help="reuse existing venv (skip venv create + skip torch reinstall, "
+                             "but still sync demucs/PyInstaller deps - useful for iterating "
+                             "on hidden imports without re-downloading torch).")
+    parser.add_argument("--skip-deps", action="store_true",
+                        help="implies --skip-venv and also skips dep install. Use only when "
+                             "you know nothing changed and you just want to rerun PyInstaller.")
     args = parser.parse_args()
 
     if args.flavor == "cuda" and platform.system() == "Darwin":
         raise SystemExit("CUDA flavor not supported on macOS")
 
     venv_dir = BACKEND_DIR / f"build-venv-{args.flavor}"
-    if args.skip_venv and venv_dir.exists():
+    skip_venv = args.skip_venv or args.skip_deps
+
+    if skip_venv and venv_dir.exists():
         py = venv_python(venv_dir)
+        if not args.skip_deps:
+            install_deps(py)  # still sync demucs deps + PyInstaller
     else:
         py = make_venv(venv_dir)
         run([str(py), "-m", "pip", "install", "--upgrade", "pip", "wheel", "setuptools"])

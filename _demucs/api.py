@@ -116,7 +116,6 @@ class Separator:
         - `audio_length`: Length of the audio (in "frame" of the tensor).
         - `models`: Count of submodels in the model.
         """
-        sys.path.append('C:/Users/justm/Desktop/Code/ytdownloader/src/SplitMe_Jay73737/demucs')
         self._name = model
         self._repo = repo
         self._load_model()

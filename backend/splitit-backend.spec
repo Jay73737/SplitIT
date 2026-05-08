@@ -15,13 +15,17 @@ datas = []
 binaries = []
 hiddenimports = []
 
-for pkg in ("torch", "torchaudio", "_demucs"):
+for pkg in ("torch", "torchaudio", "_demucs", "dora", "omegaconf", "hydra", "openunmix", "soundfile", "yt_dlp", "imageio_ffmpeg"):
     pkg_datas, pkg_binaries, pkg_hidden = collect_all(pkg)
     datas += pkg_datas
     binaries += pkg_binaries
     hiddenimports += pkg_hidden
 
-datas += collect_data_files("_demucs", includes=["remote/*.yaml", "remote/*.txt"])
+_demucs_remote = PROJECT_ROOT / "_demucs" / "remote"
+if _demucs_remote.is_dir():
+    datas.append((str(_demucs_remote), "_demucs/remote"))
+else:
+    raise SystemExit(f"_demucs/remote not found at {_demucs_remote}")
 
 hiddenimports += [
     "uvicorn.logging",
@@ -39,6 +43,24 @@ hiddenimports += [
     "_soundfile_data",
     "app",
     "split_service",
+    "youtube_service",
+    # _demucs submodules - collect_all may miss some on namespace packages
+    "_demucs",
+    "_demucs.api",
+    "_demucs.apply",
+    "_demucs.audio",
+    "_demucs.audio_legacy",
+    "_demucs.demucs",
+    "_demucs.hdemucs",
+    "_demucs.htdemucs",
+    "_demucs.pretrained",
+    "_demucs.repitch",
+    "_demucs.repo",
+    "_demucs.spec",
+    "_demucs.states",
+    "_demucs.transformer",
+    "_demucs.utils",
+    "_demucs.wav",
 ]
 
 excludes = [

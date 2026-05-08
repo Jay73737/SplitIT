@@ -22,8 +22,6 @@ from demucs.demucs import rescale_module
 from demucs.states import capture_init
 from demucs.spec import spectro, ispectro
 from demucs.hdemucs import pad1d, ScaledEmbedding, HEncLayer, MultiWrap, HDecLayer
-import sys
-sys.path.insert(0, "C:/Users/justm/Desktop/Code/ytdownloader/src/SplitMe_Jay73737/demucs")
 
 
 class HTDemucs(nn.Module):
