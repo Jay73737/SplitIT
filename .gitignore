@@ -3,6 +3,7 @@
 **/__pycache__/
 **/__pycahce__/
 /config.json
+/ui/config.json
 *.wav
 /ffmpeg/
 /SplitMe/

@@ -38,9 +38,9 @@ jobs:
           - os: ubuntu-latest
             flavor: cpu
             installer_glob: "frontend/release/*.AppImage"
-          - os: ubuntu-latest
-            flavor: cuda
-            installer_glob: "frontend/release/*.AppImage"
+          # Linux CUDA dropped: AppImage exceeds GitHub Releases' 2 GiB asset
+          # size limit (CUDA torch on Linux is ~2.5 GB unpacked). Linux users
+          # with NVIDIA GPUs can use the CPU AppImage or build from source.
 
     env:
       SPLITIT_FLAVOR: ${{ matrix.flavor }}
